@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/src/**",
+        "${env:VCPKG_ROOT}/installed/x64-windows/include",
+        "${env:VCPKG_ROOT}/installed/x64-windows/include/bullet"
+      ],
+      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "msvc-x64"
+    }
+  ],
+  "version": 4
+}

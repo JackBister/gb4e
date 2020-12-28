@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(Windows) Launch",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "build/Debug/Main.exe",
+      "args": ["pokemon-crystal.gbc"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "preLaunchTask": "msbuild"
+    },
+    {
+      "name": "(Windows) Launch Tests",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "build/Debug/gb4e_tests.exe",
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "preLaunchTask": "msbuild"
+    }
+  ]
+}
