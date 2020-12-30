@@ -1,8 +1,12 @@
 #include "InstructionResult.hh"
 
+#include <chrono>
 #include <sstream>
 
+#include "GbCpuState.hh"
+#include "MemoryState.hh"
 #include "logging/Logger.hh"
+#include "ui/Metrics.hh"
 
 static auto const logger = Logger::Create("InstructionResult");
 
@@ -66,5 +70,37 @@ std::string InstructionResult::ToString() const
     ss << '\t' << "\"consumedCycles\": " << std::hex << (int)consumedCycles << '\n';
     ss << '}';
     return ss.str();
+}
+
+void ApplyInstructionResult(GbCpuState * cpu, MemoryState * memoryState, InstructionResult const & result)
+{
+    auto beforeMem = std::chrono::high_resolution_clock::now();
+    for (auto const & memWrite : result.GetMemoryWrites()) {
+        memoryState->Write(memWrite.GetLocation(), memWrite.GetValue());
+    }
+    gb4e::ui::applyMemoryTimeNs = (std::chrono::high_resolution_clock::now() - beforeMem).count();
+
+    auto beforeFlags = std::chrono::high_resolution_clock::now();
+    if (result.GetFlagSet().has_value()) {
+        cpu->SetFlags(result.GetFlagSet().value().GetValue());
+    }
+    gb4e::ui::applyFlagsTimeNs = (std::chrono::high_resolution_clock::now() - beforeFlags).count();
+
+    auto beforeReg = std::chrono::high_resolution_clock::now();
+    for (auto const & regWrite : result.GetRegisterWrites()) {
+        if (regWrite.GetRegister()->Is8Bit()) {
+            cpu->Set8BitRegisterValue(regWrite.GetRegister(), regWrite.GetByteValue());
+        } else {
+            cpu->Set16BitRegisterValue(regWrite.GetRegister(), regWrite.GetWordValue());
+        }
+    }
+    gb4e::ui::applyRegistersTimeNs = (std::chrono::high_resolution_clock::now() - beforeReg).count();
+
+    auto beforePc = std::chrono::high_resolution_clock::now();
+    auto pcReg = GetRegister(RegisterName::PC);
+    u16 pc = cpu->Get16BitRegisterValue(GetRegister(RegisterName::PC));
+    pc += result.GetConsumedBytes();
+    cpu->Set16BitRegisterValue(pcReg, pc);
+    gb4e::ui::applyPcTimeNs = (std::chrono::high_resolution_clock::now() - beforeReg).count();
 }
 };

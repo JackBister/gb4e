@@ -1,6 +1,7 @@
 #include "InstructionAppliers.hh"
 
 #include "GbCpuState.hh"
+#include "MemoryState.hh"
 
 namespace gb4e
 {
@@ -11,7 +12,7 @@ InstructionApplier Add(RegisterName dstRegName, RegisterName srcRegName)
 
     if (dstReg->Is8Bit()) {
         assert(dstReg->GetRegisterName() == RegisterName::A);
-        return [dstReg, srcReg](GbCpuState const * state) {
+        return [dstReg, srcReg](GbCpuState const * state, MemoryState const * memory) {
             u8 prevValue = state->Get8BitRegisterValue(dstReg);
             u8 add = state->Get8BitRegisterValue(srcReg);
             u8 newValue = prevValue + add;
@@ -19,20 +20,20 @@ InstructionApplier Add(RegisterName dstRegName, RegisterName srcRegName)
             u8 prevFlags = state->GetFlags();
             u8 flags = 0;
             if (newValue == 0) {
-                flags |= 0b10000000; // zero flag
+                flags |= FLAG_ZERO;
             }
             if (prevValue < 0b00010000 && newValue >= 0b00010000) {
-                flags |= 0b00100000; // half carry flag
+                flags |= FLAG_HC;
             }
             if (newValue <= prevValue && add != 0) {
-                flags |= 0b00010000; // carry flag
+                flags |= FLAG_C;
             }
             return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
         };
     } else {
         assert(dstReg->GetRegisterName() == RegisterName::HL);
         assert(srcReg->Is16Bit());
-        return [dstReg, srcReg](GbCpuState const * state) {
+        return [dstReg, srcReg](GbCpuState const * state, MemoryState const * memory) {
             u16 prevValue = state->Get16BitRegisterValue(dstReg);
             u16 add = state->Get16BitRegisterValue(srcReg);
             u16 newValue = prevValue + add;
@@ -41,12 +42,12 @@ InstructionApplier Add(RegisterName dstRegName, RegisterName srcRegName)
             u8 newHi = newValue >> 8;
 
             u8 prevFlags = state->GetFlags();
-            u8 flags = prevFlags & 0b10000000;
+            u8 flags = prevFlags & FLAG_ZERO; // Preserve zero flag
             if (prevHi < 0b00010000 && newHi >= 0b00010000) {
-                flags |= 0b00100000; // half carry flag
+                flags |= FLAG_HC;
             }
             if (newHi <= prevHi) {
-                flags |= 0b00010000; // carry flag
+                flags |= FLAG_C;
             }
             return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 2);
         };
@@ -57,26 +58,26 @@ InstructionApplier AddFromAddrReg(RegisterName dstRegName, RegisterName addrRegN
 {
     assert(dstRegName == RegisterName::A);
     assert(addrRegName == RegisterName::HL);
-    return [dstRegName, addrRegName](GbCpuState const * state) {
+    return [dstRegName, addrRegName](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(dstRegName);
         auto addrReg = GetRegister(addrRegName);
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
         u16 addr = state->Get16BitRegisterValue(addrReg);
-        u8 add = state->Get8BitMemoryValue(addr);
+        u8 add = memory->Read(addr);
 
         u8 newValue = prevValue + add;
 
         u8 prevFlags = state->GetFlags();
         u8 flags = 0;
         if (newValue == 0) {
-            flags |= 0b10000000; // zero flag
+            flags |= FLAG_ZERO;
         }
         if (prevValue < 0b00010000 && newValue >= 0b00010000) {
-            flags |= 0b00100000; // half carry flag
+            flags |= FLAG_HC;
         }
         if (newValue <= prevValue && add != 0) {
-            flags |= 0b00010000; // carry flag
+            flags |= FLAG_C;
         }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 2);
     };
@@ -86,16 +87,16 @@ InstructionApplier And(RegisterName srcRegName)
 {
     auto srcReg = GetRegister(srcRegName);
     assert(srcReg->Is8Bit());
-    return [srcReg](GbCpuState const * state) {
+    return [srcReg](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(RegisterName::A);
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
         u8 andV = state->Get8BitRegisterValue(srcReg);
         u8 newValue = prevValue & andV;
 
         u8 prevFlags = state->GetFlags();
-        u8 flags = 0b00100000;
+        u8 flags = FLAG_HC; // Always set HC flag
         if (newValue == 0) {
-            flags |= 0b10000000;
+            flags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     };
@@ -106,15 +107,15 @@ InstructionApplier Bit(u8 bit, RegisterName regName)
     auto reg = GetRegister(regName);
     assert(reg->Is8Bit());
     assert(bit < 8);
-    return [reg, bit](GbCpuState const * state) {
+    return [reg, bit](GbCpuState const * state, MemoryState const * memory) {
         u8 regValue = state->Get8BitRegisterValue(reg);
         u8 value = (regValue >> bit) & 1;
 
         u8 prevFlags = state->GetFlags();
-        u8 flags = prevFlags & 0b00010000;
-        flags |= 0b00100000;
-        if (!value) {
-            flags |= 0b10000000;
+        u8 flags = prevFlags & FLAG_C; // Preserve carry flag
+        flags |= FLAG_HC;              // Always set HC flag
+        if (value == 0) {
+            flags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, flags), 2, 2);
     };
@@ -122,20 +123,20 @@ InstructionApplier Bit(u8 bit, RegisterName regName)
 
 InstructionApplier CallA16()
 {
-    return [](GbCpuState const * state) {
+    return [](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
         auto sp = GetRegister(RegisterName::SP);
 
         u16 prevSpAddr = state->Get16BitRegisterValue(sp);
-        u8 prevHi = state->Get8BitMemoryValue(prevSpAddr - 1);
-        u8 prevLo = state->Get8BitMemoryValue(prevSpAddr - 2);
+        u8 prevHi = memory->Read(prevSpAddr - 1);
+        u8 prevLo = memory->Read(prevSpAddr - 2);
 
         u16 prevPc = state->Get16BitRegisterValue(pc);
         u16 srcValue = prevPc + 3;
         u8 newHi = (srcValue >> 8) & 0xFF;
         u8 newLo = srcValue & 0xFF;
 
-        u16 newPc = state->Get16BitMemoryValue(prevPc + 1);
+        u16 newPc = memory->Read16(prevPc + 1);
 
         return InstructionResult(
             {MemoryWrite(prevSpAddr - 1, prevHi, newHi), MemoryWrite(prevSpAddr - 2, prevLo, newLo)},
@@ -149,20 +150,20 @@ InstructionApplier CallA16()
 
 InstructionApplier CpD8()
 {
-    return [](GbCpuState const * state) {
+    return [](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
         auto cpReg = GetRegister(RegisterName::A);
 
         u16 pcValue = state->Get16BitRegisterValue(pc);
         assert(pcValue < 0xFFFF);
 
-        u8 valueAtAddr = state->Get8BitMemoryValue(pcValue + 1);
+        u8 valueAtAddr = memory->Read(pcValue + 1);
         u8 valueInReg = state->Get8BitRegisterValue(cpReg);
 
         u8 prevFlags = state->GetFlags();
-        u8 flags = 0b01000000;
+        u8 flags = FLAG_N; // Always set N flag
         if (valueAtAddr == valueInReg) {
-            flags |= 0b10000000;
+            flags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, flags), 2, 2);
     };
@@ -171,18 +172,18 @@ InstructionApplier CpD8()
 InstructionApplier CpFromMem(RegisterName addrRegName)
 {
     assert(addrRegName == RegisterName::HL);
-    return [addrRegName](GbCpuState const * state) {
+    return [addrRegName](GbCpuState const * state, MemoryState const * memory) {
         auto addrReg = GetRegister(addrRegName);
         auto cpReg = GetRegister(RegisterName::A);
 
         u16 addr = state->Get16BitRegisterValue(addrReg);
-        u8 valueAtAddr = state->Get8BitMemoryValue(addr);
+        u8 valueAtAddr = memory->Read(addr);
         u8 valueInReg = state->Get8BitRegisterValue(cpReg);
 
         u8 prevFlags = state->GetFlags();
-        u8 flags = 0b01000000;
+        u8 flags = FLAG_N; // Always set N flag
         if (valueAtAddr == valueInReg) {
-            flags |= 0b10000000;
+            flags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, flags), 1, 2);
     };
@@ -192,21 +193,21 @@ InstructionApplier Dec(RegisterName regName)
 {
     auto reg = GetRegister(regName);
     if (reg->Is8Bit()) {
-        return [reg](GbCpuState const * state) {
+        return [reg](GbCpuState const * state, MemoryState const * memory) {
             u8 prevValue = state->Get8BitRegisterValue(reg);
             u8 newValue = prevValue - 1;
 
             u8 prevFlags = state->GetFlags();
             u8 flags = 0;
-            flags |= (prevFlags & 0b00010000); // Keep carry flag
-            flags |= 0b01000000;               // Always set sub flag
+            flags |= prevFlags & FLAG_C; // Keep carry flag
+            flags |= FLAG_N;             // Always set sub flag
             if (newValue == 0) {
-                flags |= 0b10000000; // zero flag
+                flags |= FLAG_ZERO;
             }
             return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(reg, prevValue, newValue), 1, 1);
         };
     } else {
-        return [reg](GbCpuState const * state) {
+        return [reg](GbCpuState const * state, MemoryState const * memory) {
             u16 prevValue = state->Get16BitRegisterValue(reg);
             u16 newValue = prevValue - 1;
 
@@ -219,23 +220,23 @@ InstructionApplier Inc(RegisterName regName)
 {
     auto reg = GetRegister(regName);
     if (reg->Is8Bit()) {
-        return [reg](GbCpuState const * state) {
+        return [reg](GbCpuState const * state, MemoryState const * memory) {
             u8 prevValue = state->Get8BitRegisterValue(reg);
             u8 newValue = prevValue + 1;
 
             u8 prevFlags = state->GetFlags();
             u8 flags = 0;
-            flags |= (prevFlags & 0b00010000); // Keep carry flag
+            flags |= prevFlags & FLAG_C; // Keep carry flag
             if (newValue == 0) {
-                flags |= 0b10000000; // zero flag
+                flags |= FLAG_ZERO;
             }
             if (prevValue == 0b00001111) {
-                flags |= 0b00100000; // half carry flag
+                flags |= FLAG_HC; // half carry flag
             }
             return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(reg, prevValue, newValue), 1, 1);
         };
     } else {
-        return [reg](GbCpuState const * state) {
+        return [reg](GbCpuState const * state, MemoryState const * memory) {
             u16 prevValue = state->Get16BitRegisterValue(reg);
             u16 newValue = prevValue + 1;
 
@@ -245,14 +246,14 @@ InstructionApplier Inc(RegisterName regName)
 }
 InstructionApplier JrFlagS8(u8 flagmask)
 {
-    return [flagmask](GbCpuState const * state) {
+    return [flagmask](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
 
         u8 flags = state->GetFlags();
         if (flags & flagmask) {
             u16 pcPrevValue = state->Get16BitRegisterValue(pc);
             assert(pcPrevValue < 0xFFFF);
-            s8 imm = state->Get8BitMemoryValue(pcPrevValue + 1);
+            s8 imm = memory->Read(pcPrevValue + 1);
             return InstructionResult(RegisterWrite(pc, pcPrevValue, pcPrevValue + imm), 2, 3);
         } else {
             return InstructionResult(2, 2);
@@ -262,14 +263,14 @@ InstructionApplier JrFlagS8(u8 flagmask)
 
 InstructionApplier JrNFlagS8(u8 flagmask)
 {
-    return [flagmask](GbCpuState const * state) {
+    return [flagmask](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
 
         u8 flags = state->GetFlags();
         if (!(flags & flagmask)) {
             u16 pcPrevValue = state->Get16BitRegisterValue(pc);
             assert(pcPrevValue < 0xFFFF);
-            s8 imm = state->Get8BitMemoryValue(pcPrevValue + 1);
+            s8 imm = memory->Read(pcPrevValue + 1);
             return InstructionResult(RegisterWrite(pc, pcPrevValue, pcPrevValue + imm), 2, 3);
         } else {
             return InstructionResult(2, 2);
@@ -279,19 +280,19 @@ InstructionApplier JrNFlagS8(u8 flagmask)
 
 InstructionApplier JrS8()
 {
-    return [](GbCpuState const * state) {
+    return [](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
 
         u16 pcPrevValue = state->Get16BitRegisterValue(pc);
         assert(pcPrevValue < 0xFFFF);
-        s8 imm = state->Get8BitMemoryValue(pcPrevValue + 1);
+        s8 imm = memory->Read(pcPrevValue + 1);
         return InstructionResult(RegisterWrite(pc, pcPrevValue, pcPrevValue + imm), 2, 3);
     };
 }
 
 InstructionApplier Ld(RegisterName dstRegName, RegisterName srcRegName)
 {
-    return [dstRegName, srcRegName](GbCpuState const * state) {
+    return [dstRegName, srcRegName](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(dstRegName);
         auto srcReg = GetRegister(srcRegName);
         assert(dstReg->Is8Bit() && srcReg->Is8Bit());
@@ -304,16 +305,16 @@ InstructionApplier Ld(RegisterName dstRegName, RegisterName srcRegName)
 
 InstructionApplier LdA8()
 {
-    return [](GbCpuState const * state) {
+    return [](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
         auto srcReg = GetRegister(RegisterName::A);
 
         u16 pcValue = state->Get16BitRegisterValue(pc);
         assert(pcValue < 0xFFFF);
-        u8 addrImm = state->Get8BitMemoryValue(pcValue + 1);
+        u8 addrImm = memory->Read(pcValue + 1);
         u16 addr = 0xFF00 + addrImm;
 
-        u8 prevValue = state->Get8BitMemoryValue(addr);
+        u8 prevValue = memory->Read(addr);
         u8 newValue = state->Get8BitRegisterValue(srcReg);
 
         return InstructionResult(MemoryWrite(addr, prevValue, newValue), 2, 3);
@@ -325,28 +326,28 @@ InstructionApplier LdA16(RegisterName srcRegName)
     assert(srcRegName == RegisterName::A || srcRegName == RegisterName::SP);
     auto srcReg = GetRegister(srcRegName);
     if (srcReg->Is8Bit()) {
-        return [srcReg](GbCpuState const * state) {
+        return [srcReg](GbCpuState const * state, MemoryState const * memory) {
             auto pc = GetRegister(RegisterName::PC);
 
             u16 pcValue = state->Get16BitRegisterValue(pc);
             assert(pcValue < 0xFFFE);
-            u16 addr = state->Get16BitMemoryValue(pcValue + 1);
+            u16 addr = memory->Read16(pcValue + 1);
 
-            u8 prevValue = state->Get8BitMemoryValue(addr);
+            u8 prevValue = memory->Read(addr);
             u8 newValue = state->Get8BitRegisterValue(srcReg);
 
             return InstructionResult(MemoryWrite(addr, prevValue, newValue), 3, 4);
         };
     } else {
-        return [srcReg](GbCpuState const * state) {
+        return [srcReg](GbCpuState const * state, MemoryState const * memory) {
             auto pc = GetRegister(RegisterName::PC);
 
             u16 pcValue = state->Get16BitRegisterValue(pc);
             assert(pcValue < 0xFFFE);
-            u16 addr = state->Get16BitMemoryValue(pcValue + 1);
+            u16 addr = memory->Read16(pcValue + 1);
 
-            u8 prevLo = state->Get8BitMemoryValue(addr);
-            u8 prevHi = state->Get8BitMemoryValue(addr + 1);
+            u8 prevLo = memory->Read(addr);
+            u8 prevHi = memory->Read(addr + 1);
 
             u16 srcValue = state->Get16BitRegisterValue(srcReg);
             u8 newLo = srcValue & 0xFF;
@@ -358,7 +359,7 @@ InstructionApplier LdA16(RegisterName srcRegName)
 
 InstructionApplier LdD8(RegisterName dstRegName)
 {
-    return [dstRegName](GbCpuState const * state) {
+    return [dstRegName](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(dstRegName);
         assert(dstReg->Is8Bit());
         auto pc = GetRegister(RegisterName::PC);
@@ -366,14 +367,14 @@ InstructionApplier LdD8(RegisterName dstRegName)
         u8 dstPrevValue = state->Get8BitRegisterValue(dstReg);
         u16 pcValue = state->Get16BitRegisterValue(pc);
         assert(pcValue < 0xFFFF);
-        u8 imm = state->Get8BitMemoryValue(pcValue + 1);
+        u8 imm = memory->Read(pcValue + 1);
         return InstructionResult(RegisterWrite(dstReg, dstPrevValue, imm), 2, 2);
     };
 }
 
 InstructionApplier LdD16(RegisterName dstRegName)
 {
-    return [dstRegName](GbCpuState const * state) {
+    return [dstRegName](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(dstRegName);
         assert(dstReg->Is16Bit());
         auto pc = GetRegister(RegisterName::PC);
@@ -381,14 +382,14 @@ InstructionApplier LdD16(RegisterName dstRegName)
         u16 dstPrevValue = state->Get16BitRegisterValue(dstReg);
         u16 pcValue = state->Get16BitRegisterValue(pc);
         assert(pcValue < 0xFFFE);
-        u16 imm = state->Get16BitMemoryValue(pcValue + 1);
+        u16 imm = memory->Read16(pcValue + 1);
         return InstructionResult(RegisterWrite(dstReg, dstPrevValue, imm), 3, 3);
     };
 }
 
 InstructionApplier LdFromAddrReg(RegisterName dstRegName, RegisterName addrRegName)
 {
-    return [dstRegName, addrRegName](GbCpuState const * state) {
+    return [dstRegName, addrRegName](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(dstRegName);
         assert(dstReg->Is8Bit());
         auto addrReg = GetRegister(addrRegName);
@@ -396,7 +397,7 @@ InstructionApplier LdFromAddrReg(RegisterName dstRegName, RegisterName addrRegNa
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
         u16 addrValue = state->Get16BitRegisterValue(addrReg);
-        u8 valueAtAddr = state->Get8BitMemoryValue(addrValue);
+        u8 valueAtAddr = memory->Read(addrValue);
         return InstructionResult(RegisterWrite(dstReg, prevValue, valueAtAddr), 1, 2);
     };
 }
@@ -405,16 +406,16 @@ InstructionApplier LdFromA8(RegisterName dstRegName)
 {
     auto dstReg = GetRegister(dstRegName);
     assert(dstReg->Is8Bit());
-    return [dstReg](GbCpuState const * state) {
+    return [dstReg](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
 
         u16 pcValue = state->Get16BitRegisterValue(pc);
         assert(pcValue < 0xFFFF);
-        u8 addrImm = state->Get8BitMemoryValue(pcValue + 1);
+        u8 addrImm = memory->Read(pcValue + 1);
         u16 addr = 0xFF00 + addrImm;
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
-        u8 newValue = state->Get8BitMemoryValue(addr);
+        u8 newValue = memory->Read(addr);
         return InstructionResult(RegisterWrite(dstReg, prevValue, newValue), 2, 3);
     };
 }
@@ -423,15 +424,15 @@ InstructionApplier LdFromA16(RegisterName dstRegName)
 {
     auto dstReg = GetRegister(dstRegName);
     assert(dstReg->Is8Bit());
-    return [dstReg](GbCpuState const * state) {
+    return [dstReg](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
 
         u16 pcValue = state->Get16BitRegisterValue(pc);
         assert(pcValue < 0xFFFE);
-        u16 addr = state->Get16BitMemoryValue(pcValue + 1);
+        u16 addr = memory->Read16(pcValue + 1);
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
-        u8 newValue = state->Get8BitMemoryValue(addr);
+        u8 newValue = memory->Read(addr);
         return InstructionResult(RegisterWrite(dstReg, prevValue, newValue), 3, 4);
     };
 }
@@ -439,12 +440,12 @@ InstructionApplier LdFromA16(RegisterName dstRegName)
 InstructionApplier LdHlIncDecA(s8 modifier)
 {
     assert(modifier == 1 || modifier == -1);
-    return [modifier](GbCpuState const * state) {
+    return [modifier](GbCpuState const * state, MemoryState const * memory) {
         auto hl = GetRegister(RegisterName::HL);
         auto a = GetRegister(RegisterName::A);
 
         u16 hlPrevValue = state->Get16BitRegisterValue(hl);
-        u8 memPrevValue = state->Get8BitMemoryValue(hlPrevValue);
+        u8 memPrevValue = memory->Read(hlPrevValue);
         u8 aValue = state->Get8BitRegisterValue(a);
 
         return InstructionResult(MemoryWrite(hlPrevValue, memPrevValue, aValue),
@@ -461,20 +462,20 @@ InstructionApplier LdMemViaReg(RegisterName addrRegName, RegisterName srcRegName
     assert(srcReg->Is8Bit());
     if (addrReg->Is8Bit()) {
         assert(addrReg->GetRegisterName() == RegisterName::C);
-        return [addrReg, srcReg](GbCpuState const * state) {
+        return [addrReg, srcReg](GbCpuState const * state, MemoryState const * memory) {
             u8 addrOffset = state->Get8BitRegisterValue(addrReg);
             u16 addr = 0xFF00 + addrOffset;
             u8 srcValue = state->Get8BitRegisterValue(srcReg);
-            u8 prevValue = state->Get8BitMemoryValue(addr);
+            u8 prevValue = memory->Read(addr);
             return InstructionResult(MemoryWrite(addr, prevValue, srcValue), 1, 2);
         };
     } else {
         assert(addrReg->GetRegisterName() == RegisterName::BC || addrReg->GetRegisterName() == RegisterName::DE ||
                addrReg->GetRegisterName() == RegisterName::HL);
-        return [addrReg, srcReg](GbCpuState const * state) {
+        return [addrReg, srcReg](GbCpuState const * state, MemoryState const * memory) {
             u16 addr = state->Get16BitRegisterValue(addrReg);
             u8 srcValue = state->Get8BitRegisterValue(srcReg);
-            u8 prevValue = state->Get8BitMemoryValue(addr);
+            u8 prevValue = memory->Read(addr);
             return InstructionResult(MemoryWrite(addr, prevValue, srcValue), 1, 2);
         };
     }
@@ -484,7 +485,7 @@ InstructionApplier Or(RegisterName srcRegName)
 {
     auto srcReg = GetRegister(srcRegName);
     assert(srcReg->Is8Bit());
-    return [srcReg](GbCpuState const * state) {
+    return [srcReg](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(RegisterName::A);
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
@@ -494,7 +495,7 @@ InstructionApplier Or(RegisterName srcRegName)
         u8 prevFlags = state->GetFlags();
         u8 flags = 0;
         if (newValue == 0) {
-            flags |= 0b10000000;
+            flags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     };
@@ -504,14 +505,14 @@ InstructionApplier Pop(RegisterName dstRegName)
 {
     auto dstReg = GetRegister(dstRegName);
     assert(dstReg->Is16Bit());
-    return [dstReg](GbCpuState const * state) {
+    return [dstReg](GbCpuState const * state, MemoryState const * memory) {
         auto sp = GetRegister(RegisterName::SP);
 
         u16 prevSpAddr = state->Get16BitRegisterValue(sp);
         u16 prevValue = state->Get16BitRegisterValue(dstReg);
 
-        u8 popLo = state->Get8BitMemoryValue(prevSpAddr);
-        u8 popHi = state->Get8BitMemoryValue(prevSpAddr + 1);
+        u8 popLo = memory->Read(prevSpAddr);
+        u8 popHi = memory->Read(prevSpAddr + 1);
 
         u16 newValue = ((u16)popLo) | (((u16)popHi) << 8);
         return InstructionResult(
@@ -523,12 +524,12 @@ InstructionApplier Push(RegisterName srcRegName)
 {
     auto srcReg = GetRegister(srcRegName);
     assert(srcReg->Is16Bit());
-    return [srcReg](GbCpuState const * state) {
+    return [srcReg](GbCpuState const * state, MemoryState const * memory) {
         auto sp = GetRegister(RegisterName::SP);
 
         u16 prevSpAddr = state->Get16BitRegisterValue(sp);
-        u8 prevHi = state->Get8BitMemoryValue(prevSpAddr - 1);
-        u8 prevLo = state->Get8BitMemoryValue(prevSpAddr - 2);
+        u8 prevHi = memory->Read(prevSpAddr - 1);
+        u8 prevLo = memory->Read(prevSpAddr - 2);
 
         u16 srcValue = state->Get16BitRegisterValue(srcReg);
         u8 newHi = (srcValue >> 8) & 0xFF;
@@ -544,26 +545,29 @@ InstructionApplier Push(RegisterName srcRegName)
 
 InstructionApplier Ret()
 {
-    return [](GbCpuState const * state) {
+    return [](GbCpuState const * state, MemoryState const * memory) {
         auto pc = GetRegister(RegisterName::PC);
         auto sp = GetRegister(RegisterName::SP);
 
         u16 prevSpAddr = state->Get16BitRegisterValue(sp);
         assert(prevSpAddr < 0xFFFF);
-        u8 pcLo = state->Get8BitMemoryValue(prevSpAddr);
-        u8 pcHi = state->Get8BitMemoryValue(prevSpAddr + 1);
+        u8 pcLo = memory->Read(prevSpAddr);
+        u8 pcHi = memory->Read(prevSpAddr + 1);
 
         u16 prevPcValue = state->Get16BitRegisterValue(pc);
         u16 newPcValue = ((u16)pcLo) | (((u16)pcHi) << 8);
 
         return InstructionResult(
-            {RegisterWrite(sp, prevSpAddr, prevSpAddr + 2), RegisterWrite(pc, prevPcValue, newPcValue)}, 1, 4);
+            // TODO: See CallA16 for why consumedBytes is 0
+            {RegisterWrite(sp, prevSpAddr, prevSpAddr + 2), RegisterWrite(pc, prevPcValue, newPcValue)},
+            0,
+            4);
     };
 }
 
 InstructionApplier RetNFlag(u8 flagmask)
 {
-    return [flagmask](GbCpuState const * state) {
+    return [flagmask](GbCpuState const * state, MemoryState const * memory) {
         u8 flags = state->GetFlags();
         if (!(flags & flagmask)) {
             auto pc = GetRegister(RegisterName::PC);
@@ -571,14 +575,17 @@ InstructionApplier RetNFlag(u8 flagmask)
 
             u16 prevSpAddr = state->Get16BitRegisterValue(sp);
             assert(prevSpAddr < 0xFFFF);
-            u8 pcLo = state->Get8BitMemoryValue(prevSpAddr);
-            u8 pcHi = state->Get8BitMemoryValue(prevSpAddr + 1);
+            u8 pcLo = memory->Read(prevSpAddr);
+            u8 pcHi = memory->Read(prevSpAddr + 1);
 
             u16 prevPcValue = state->Get16BitRegisterValue(pc);
             u16 newPcValue = ((u16)pcLo) | (((u16)pcHi) << 8);
 
             return InstructionResult(
-                {RegisterWrite(sp, prevSpAddr, prevSpAddr + 2), RegisterWrite(pc, prevPcValue, newPcValue)}, 1, 5);
+                // TODO: See CallA16 for why consumedBytes is 0
+                {RegisterWrite(sp, prevSpAddr, prevSpAddr + 2), RegisterWrite(pc, prevPcValue, newPcValue)},
+                0,
+                5);
         } else {
             return InstructionResult(1, 2);
         }
@@ -589,16 +596,16 @@ InstructionApplier Rl(RegisterName regName)
 {
     auto reg = GetRegister(regName);
     assert(reg->Is8Bit());
-    return [reg](GbCpuState const * state) {
+    return [reg](GbCpuState const * state, MemoryState const * memory) {
         u8 prevValue = state->Get8BitRegisterValue(reg);
         u8 prevFlags = state->GetFlags();
-        u8 prevCarry = (prevFlags >> 4) & 0b00000001;
-        u8 newCarry = (prevValue >> 7) & 0b00000001;
-        u8 newFlags = ((newCarry) << 4) & 0b00010000;
+        u8 prevCarry = (prevFlags >> 4) & 1;
+        u8 newCarry = (prevValue >> 7) & 1;
+        u8 newFlags = newCarry ? FLAG_C : 0;
 
         u8 newValue = (prevValue << 1) | prevCarry;
         if (newValue == 0) {
-            newFlags |= 0b10000000;
+            newFlags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(reg, prevValue, newValue), 2, 2);
     };
@@ -606,14 +613,14 @@ InstructionApplier Rl(RegisterName regName)
 
 InstructionApplier Rla()
 {
-    return [](GbCpuState const * state) {
+    return [](GbCpuState const * state, MemoryState const * memory) {
         auto reg = GetRegister(RegisterName::A);
 
         u8 prevValue = state->Get8BitRegisterValue(reg);
         u8 prevFlags = state->GetFlags();
         u8 prevCarry = (prevFlags >> 4) & 0b00000001;
         u8 newCarry = (prevValue >> 7) & 0b00000001;
-        u8 newFlags = ((newCarry) << 4) & 0b00010000;
+        u8 newFlags = newCarry ? FLAG_C : 0;
 
         u8 newValue = (prevValue << 1) | prevCarry;
         return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(reg, prevValue, newValue), 1, 1);
@@ -624,7 +631,7 @@ InstructionApplier Sub(RegisterName srcRegName)
 {
     auto srcReg = GetRegister(srcRegName);
     assert(srcReg->Is8Bit());
-    return [srcReg](GbCpuState const * state) {
+    return [srcReg](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(RegisterName::A);
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
@@ -632,15 +639,15 @@ InstructionApplier Sub(RegisterName srcRegName)
         u8 newValue = prevValue - sub;
 
         u8 prevFlags = state->GetFlags();
-        u8 flags = 0b01000000;
+        u8 flags = FLAG_N; // Always set sub flag
         if (newValue == 0) {
-            flags |= 0b10000000; // zero flag
+            flags |= FLAG_ZERO;
         }
         if (prevValue < 0b00010000 && newValue >= 0b00010000) {
-            flags |= 0b00100000; // half carry flag
+            flags |= FLAG_HC;
         }
         if (newValue >= prevValue && sub != 0) {
-            flags |= 0b00010000; // carry flag
+            flags |= FLAG_C;
         }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     };
@@ -650,7 +657,7 @@ InstructionApplier Xor(RegisterName srcRegName)
 {
     auto srcReg = GetRegister(srcRegName);
     assert(srcReg->Is8Bit());
-    return [srcReg](GbCpuState const * state) {
+    return [srcReg](GbCpuState const * state, MemoryState const * memory) {
         auto dstReg = GetRegister(RegisterName::A);
 
         u8 prevValue = state->Get8BitRegisterValue(dstReg);
@@ -660,7 +667,7 @@ InstructionApplier Xor(RegisterName srcRegName)
         u8 prevFlags = state->GetFlags();
         u8 flags = 0;
         if (newValue == 0) {
-            flags |= 0b10000000;
+            flags |= FLAG_ZERO;
         }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     };

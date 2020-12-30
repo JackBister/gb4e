@@ -11,12 +11,13 @@ TEST Instr_Ld_B_A()
     using namespace gb4e;
     auto applier = Ld(RegisterName::B, RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     auto regB = GetRegister(RegisterName::B);
     state.Set8BitRegisterValue(regA, 123);
     state.Set8BitRegisterValue(regB, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -35,13 +36,14 @@ TEST Instr_Ld_SP_D16()
     using namespace gb4e;
     auto applier = LdD16(RegisterName::SP);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0);
     state.Set16BitRegisterValue(GetRegister(RegisterName::SP), 0xBEEF);
-    state.Set8BitMemoryValue(0, 0x31);
-    state.Set8BitMemoryValue(1, 0xFE);
-    state.Set8BitMemoryValue(2, 0xFF);
+    memory.Write(0, 0x31);
+    memory.Write(1, 0xFE);
+    memory.Write(2, 0xFF);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -60,10 +62,11 @@ TEST Instr_Inc_BC()
     using namespace gb4e;
     auto applier = Inc(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
     state.Set16BitRegisterValue(regBC, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -83,10 +86,11 @@ TEST Instr_Inc_BC_Wraparound()
     using namespace gb4e;
     auto applier = Inc(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
     state.Set16BitRegisterValue(regBC, 0xFFFF);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -106,10 +110,11 @@ TEST Instr_Inc_A()
     using namespace gb4e;
     auto applier = Inc(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 5);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -129,10 +134,11 @@ TEST Instr_Inc_A_Wraparound()
     using namespace gb4e;
     auto applier = Inc(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 0xFF);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -152,10 +158,11 @@ TEST Instr_Inc_A_HalfCarry()
     using namespace gb4e;
     auto applier = Inc(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 0b00001111);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -175,11 +182,12 @@ TEST Instr_Inc_A_PreservesCarry()
     using namespace gb4e;
     auto applier = Inc(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 5);
     state.SetFlags(0b00010000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT_EQ(0b00010000, result.GetFlagSet().value().GetValue());
@@ -200,10 +208,11 @@ TEST Instr_Dec_BC()
     using namespace gb4e;
     auto applier = Dec(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
     state.Set16BitRegisterValue(regBC, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -223,10 +232,11 @@ TEST Instr_Dec_BC_Wraparound()
     using namespace gb4e;
     auto applier = Dec(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
     state.Set16BitRegisterValue(regBC, 0);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -246,10 +256,11 @@ TEST Instr_Dec_A()
     using namespace gb4e;
     auto applier = Dec(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 5);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -269,10 +280,11 @@ TEST Instr_Dec_A_Zero()
     using namespace gb4e;
     auto applier = Dec(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 1);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -292,10 +304,11 @@ TEST Instr_Dec_A_Wraparound()
     using namespace gb4e;
     auto applier = Dec(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 0);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -315,11 +328,12 @@ TEST Instr_Dec_A_PreservesCarry()
     using namespace gb4e;
     auto applier = Dec(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 5);
     state.SetFlags(0b00010000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT_EQ(0b01010000, result.GetFlagSet().value().GetValue());
@@ -341,13 +355,14 @@ TEST Instr_LdD8_A()
     using namespace gb4e;
     auto applier = LdD8(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0);
-    state.Set8BitMemoryValue(0, 0x3E);
-    state.Set8BitMemoryValue(1, 123);
+    memory.Write(0, 0x3E);
+    memory.Write(1, 123);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -367,14 +382,15 @@ TEST Instr_LdD16_BC()
     using namespace gb4e;
     auto applier = LdD16(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
     state.Set16BitRegisterValue(regBC, 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0);
-    state.Set8BitMemoryValue(0, 0x01);
-    state.Set8BitMemoryValue(1, 0xEF);
-    state.Set8BitMemoryValue(2, 0xBE);
+    memory.Write(0, 0x01);
+    memory.Write(1, 0xEF);
+    memory.Write(2, 0xBE);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -394,11 +410,12 @@ TEST Instr_Rla_NoCarry()
     using namespace gb4e;
     auto applier = Rla();
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 0b00000001);
     state.SetFlags(0b11100000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT_EQ(0, result.GetFlagSet().value().GetValue());
@@ -419,11 +436,12 @@ TEST Instr_Rla_Carry()
     using namespace gb4e;
     auto applier = Rla();
     GbCpuState state;
+    MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
     state.Set8BitRegisterValue(regA, 0b10000000);
     state.SetFlags(0b11110000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT_EQ(0b00010000, result.GetFlagSet().value().GetValue());
@@ -444,12 +462,13 @@ TEST Instr_JrS8()
     using namespace gb4e;
     auto applier = JrS8();
     GbCpuState state;
+    MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(regPC, 0);
-    state.Set8BitMemoryValue(0x0, 0x18);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x0, 0x18);
+    memory.Write(0x1, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -469,11 +488,12 @@ TEST Instr_LdFromAddrReg_A_DE()
     using namespace gb4e;
     auto applier = LdFromAddrReg(RegisterName::A, RegisterName::DE);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::DE), 0x1);
-    state.Set8BitMemoryValue(0x1, 123);
+    memory.Write(0x1, 123);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -493,13 +513,14 @@ TEST Instr_JrNzS8_Jump()
     using namespace gb4e;
     auto applier = JrNFlagS8(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(regPC, 0);
-    state.Set8BitMemoryValue(0x0, 0x20);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x0, 0x20);
+    memory.Write(0x1, 100);
     state.SetFlags(0b00000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -519,13 +540,14 @@ TEST Instr_JrNzS8_NoJump()
     using namespace gb4e;
     auto applier = JrNFlagS8(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(regPC, 0);
-    state.Set8BitMemoryValue(0x0, 0x20);
-    state.Set8BitMemoryValue(0x1, 0xBA);
+    memory.Write(0x0, 0x20);
+    memory.Write(0x1, 0xBA);
     state.SetFlags(0b10000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -541,12 +563,13 @@ TEST Instr_LdHlPlus_A()
     using namespace gb4e;
     auto applier = LdHlIncDecA(1);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regHL = GetRegister(RegisterName::HL);
     state.Set16BitRegisterValue(regHL, 0x1);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x1, 100);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(1, result.GetMemoryWrites().size());
@@ -570,12 +593,13 @@ TEST Instr_LdHlMinus_A()
     using namespace gb4e;
     auto applier = LdHlIncDecA(-1);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regHL = GetRegister(RegisterName::HL);
     state.Set16BitRegisterValue(regHL, 0x1);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x1, 100);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(1, result.GetMemoryWrites().size());
@@ -599,11 +623,12 @@ TEST Instr_LdMemViaReg_C_A()
     using namespace gb4e;
     auto applier = LdMemViaReg(RegisterName::C, RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::C), 0xBA);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
-    state.Set8BitMemoryValue(0xFFBA, 100);
+    memory.Write(0xFFBA, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(1, result.GetMemoryWrites().size());
@@ -622,11 +647,12 @@ TEST Instr_LdMemViaReg_HL_B()
     using namespace gb4e;
     auto applier = LdMemViaReg(RegisterName::HL, RegisterName::B);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0xBEEF);
     state.Set8BitRegisterValue(GetRegister(RegisterName::B), 123);
-    state.Set8BitMemoryValue(0xBEEF, 100);
+    memory.Write(0xBEEF, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(1, result.GetMemoryWrites().size());
@@ -645,13 +671,14 @@ TEST Instr_JrZS8_Jump()
     using namespace gb4e;
     auto applier = JrFlagS8(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(regPC, 0);
-    state.Set8BitMemoryValue(0x0, 0x20);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x0, 0x20);
+    memory.Write(0x1, 100);
     state.SetFlags(0b10000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -671,13 +698,14 @@ TEST Instr_JrZS8_NoJump()
     using namespace gb4e;
     auto applier = JrFlagS8(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(regPC, 0);
-    state.Set8BitMemoryValue(0x0, 0x20);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x0, 0x20);
+    memory.Write(0x1, 100);
     state.SetFlags(0b00000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -693,10 +721,11 @@ TEST Instr_Add_A_B()
     using namespace gb4e;
     auto applier = Add(RegisterName::A, RegisterName::B);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set8BitRegisterValue(GetRegister(RegisterName::B), 23);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -715,10 +744,11 @@ TEST Instr_Add_HL_BC()
     using namespace gb4e;
     auto applier = Add(RegisterName::HL, RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::BC), 23);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -737,11 +767,12 @@ TEST Instr_AddFromAddrReg_A_HL()
     using namespace gb4e;
     auto applier = AddFromAddrReg(RegisterName::A, RegisterName::HL);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x1);
-    state.Set8BitMemoryValue(0x1, 23);
+    memory.Write(0x1, 23);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -760,10 +791,11 @@ TEST Instr_Sub_B()
     using namespace gb4e;
     auto applier = Sub(RegisterName::B);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set8BitRegisterValue(GetRegister(RegisterName::B), 10);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -782,10 +814,11 @@ TEST Instr_And_B()
     using namespace gb4e;
     auto applier = And(RegisterName::B);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 0b10010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::B), 0b10000001);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -804,10 +837,11 @@ TEST Instr_Xor_B()
     using namespace gb4e;
     auto applier = Xor(RegisterName::B);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 0b10010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::B), 0b10000001);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -826,10 +860,11 @@ TEST Instr_Or_B()
     using namespace gb4e;
     auto applier = Or(RegisterName::B);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 0b10010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::B), 0b10000001);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -848,12 +883,13 @@ TEST Instr_CpFromMem_HL_Equals()
     using namespace gb4e;
     auto applier = CpFromMem(RegisterName::HL);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x1);
-    state.Set8BitMemoryValue(0x1, 100);
+    memory.Write(0x1, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -871,12 +907,13 @@ TEST Instr_CpFromMem_HL_NotEquals()
     using namespace gb4e;
     auto applier = CpFromMem(RegisterName::HL);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x1);
-    state.Set8BitMemoryValue(0x1, 23);
+    memory.Write(0x1, 23);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -894,15 +931,16 @@ TEST Instr_RetNz_Jump()
     using namespace gb4e;
     auto applier = RetNFlag(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0);
     auto sp = GetRegister(RegisterName::SP);
     auto pc = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(sp, 0x10);
     state.Set16BitRegisterValue(pc, 0x01);
-    state.Set8BitMemoryValue(0x10, 0xEF);
-    state.Set8BitMemoryValue(0x11, 0xBE);
+    memory.Write(0x10, 0xEF);
+    memory.Write(0x11, 0xBE);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -925,15 +963,16 @@ TEST Instr_RetNz_NoJump()
     using namespace gb4e;
     auto applier = RetNFlag(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0b10000000);
     auto sp = GetRegister(RegisterName::SP);
     auto pc = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(sp, 0x10);
     state.Set16BitRegisterValue(pc, 0x01);
-    state.Set8BitMemoryValue(0x10, 0xEF);
-    state.Set8BitMemoryValue(0x11, 0xBE);
+    memory.Write(0x10, 0xEF);
+    memory.Write(0x11, 0xBE);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -948,14 +987,15 @@ TEST Instr_Pop_BC()
     using namespace gb4e;
     auto applier = Pop(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto bc = GetRegister(RegisterName::BC);
     auto sp = GetRegister(RegisterName::SP);
     state.Set16BitRegisterValue(bc, 100);
     state.Set16BitRegisterValue(sp, 0x10);
-    state.Set8BitMemoryValue(0x10, 0xEF);
-    state.Set8BitMemoryValue(0x11, 0xBE);
+    memory.Write(0x10, 0xEF);
+    memory.Write(0x11, 0xBE);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -978,14 +1018,15 @@ TEST Instr_Push_BC()
     using namespace gb4e;
     auto applier = Push(RegisterName::BC);
     GbCpuState state;
+    MemoryStateFake memory;
     auto bc = GetRegister(RegisterName::BC);
     auto sp = GetRegister(RegisterName::SP);
     state.Set16BitRegisterValue(bc, 0xBEEF);
     state.Set16BitRegisterValue(sp, 0x12);
-    state.Set8BitMemoryValue(0x11, 0xFE);
-    state.Set8BitMemoryValue(0x10, 0xCA);
+    memory.Write(0x11, 0xFE);
+    memory.Write(0x10, 0xCA);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(2, result.GetMemoryWrites().size());
@@ -1012,14 +1053,15 @@ TEST Instr_Ret()
     using namespace gb4e;
     auto applier = Ret();
     GbCpuState state;
+    MemoryStateFake memory;
     auto sp = GetRegister(RegisterName::SP);
     auto pc = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(sp, 0x10);
     state.Set16BitRegisterValue(pc, 0x01);
-    state.Set8BitMemoryValue(0x10, 0xEF);
-    state.Set8BitMemoryValue(0x11, 0xBE);
+    memory.Write(0x10, 0xEF);
+    memory.Write(0x11, 0xBE);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -1042,18 +1084,19 @@ TEST Instr_CallA16()
     using namespace gb4e;
     auto applier = CallA16();
     GbCpuState state;
+    MemoryStateFake memory;
     auto sp = GetRegister(RegisterName::SP);
     auto pc = GetRegister(RegisterName::PC);
     state.Set16BitRegisterValue(sp, 0x12);
     state.Set16BitRegisterValue(pc, 0x01);
-    state.Set8BitMemoryValue(0x01, 0xCD);
-    state.Set8BitMemoryValue(0x02, 0xEF);
-    state.Set8BitMemoryValue(0x03, 0xBE);
+    memory.Write(0x01, 0xCD);
+    memory.Write(0x02, 0xEF);
+    memory.Write(0x03, 0xBE);
 
-    state.Set8BitMemoryValue(0x10, 0xBE);
-    state.Set8BitMemoryValue(0x11, 0xBA);
+    memory.Write(0x10, 0xBE);
+    memory.Write(0x11, 0xBA);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(2, result.GetMemoryWrites().size());
@@ -1084,13 +1127,14 @@ TEST Instr_LdA8()
     using namespace gb4e;
     auto applier = LdA8();
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xE1);
-    state.Set8BitMemoryValue(0x2, 0x10);
-    state.Set8BitMemoryValue(0xFF10, 100);
+    memory.Write(0x1, 0xE1);
+    memory.Write(0x2, 0x10);
+    memory.Write(0xFF10, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(1, result.GetMemoryWrites().size());
@@ -1109,14 +1153,15 @@ TEST Instr_LdA16_A()
     using namespace gb4e;
     auto applier = LdA16(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xEA);
-    state.Set8BitMemoryValue(0x2, 0xEF);
-    state.Set8BitMemoryValue(0x3, 0xBE);
-    state.Set8BitMemoryValue(0xBEEF, 100);
+    memory.Write(0x1, 0xEA);
+    memory.Write(0x2, 0xEF);
+    memory.Write(0x3, 0xBE);
+    memory.Write(0xBEEF, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(1, result.GetMemoryWrites().size());
@@ -1135,15 +1180,16 @@ TEST Instr_LdA16_SP()
     using namespace gb4e;
     auto applier = LdA16(RegisterName::SP);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::SP), 0xBABE);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xEA);
-    state.Set8BitMemoryValue(0x2, 0xEF);
-    state.Set8BitMemoryValue(0x3, 0xBE);
-    state.Set8BitMemoryValue(0xBEEF, 100);
-    state.Set8BitMemoryValue(0xBEEF + 1, 101);
+    memory.Write(0x1, 0xEA);
+    memory.Write(0x2, 0xEF);
+    memory.Write(0x3, 0xBE);
+    memory.Write(0xBEEF, 100);
+    memory.Write(0xBEEF + 1, 101);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT_EQ(2, result.GetMemoryWrites().size());
@@ -1166,13 +1212,14 @@ TEST Instr_LDFromA8_A()
     using namespace gb4e;
     auto applier = LdFromA8(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xF0);
-    state.Set8BitMemoryValue(0x2, 0x10);
-    state.Set8BitMemoryValue(0xFF10, 123);
+    memory.Write(0x1, 0xF0);
+    memory.Write(0x2, 0x10);
+    memory.Write(0xFF10, 123);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -1191,14 +1238,15 @@ TEST Instr_LdFromA16_A()
     using namespace gb4e;
     auto applier = LdFromA16(RegisterName::A);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xF0);
-    state.Set8BitMemoryValue(0x2, 0xEF);
-    state.Set8BitMemoryValue(0x3, 0xBE);
-    state.Set8BitMemoryValue(0xBEEF, 123);
+    memory.Write(0x1, 0xF0);
+    memory.Write(0x2, 0xEF);
+    memory.Write(0x3, 0xBE);
+    memory.Write(0xBEEF, 123);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(!result.GetFlagSet().has_value());
     ASSERT(result.GetMemoryWrites().empty());
@@ -1217,13 +1265,14 @@ TEST Instr_CpD8_Equals()
     using namespace gb4e;
     auto applier = CpD8();
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xFE);
-    state.Set8BitMemoryValue(0x2, 100);
+    memory.Write(0x1, 0xFE);
+    memory.Write(0x2, 100);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1241,13 +1290,14 @@ TEST Instr_CpD8_NotEquals()
     using namespace gb4e;
     auto applier = CpD8();
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0);
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x1);
-    state.Set8BitMemoryValue(0x1, 0xFE);
-    state.Set8BitMemoryValue(0x2, 101);
+    memory.Write(0x1, 0xFE);
+    memory.Write(0x2, 101);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1265,10 +1315,11 @@ TEST Instr_Rl_C_Carry()
     using namespace gb4e;
     auto applier = Rl(RegisterName::C);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0b00010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::C), 0b10000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1290,10 +1341,11 @@ TEST Instr_Rl_C_NoCarry()
     using namespace gb4e;
     auto applier = Rl(RegisterName::C);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0b00010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::C), 0b01000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1315,10 +1367,11 @@ TEST Instr_Rl_C_Zero()
     using namespace gb4e;
     auto applier = Rl(RegisterName::C);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0);
     state.Set8BitRegisterValue(GetRegister(RegisterName::C), 0);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1331,10 +1384,11 @@ TEST Instr_Bit_7_H_0()
     using namespace gb4e;
     auto applier = Bit(7, RegisterName::H);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0b00010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::H), 0b00000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1352,10 +1406,11 @@ TEST Instr_Bit_7_H_1()
     using namespace gb4e;
     auto applier = Bit(7, RegisterName::H);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0b00010000);
     state.Set8BitRegisterValue(GetRegister(RegisterName::H), 0b10000000);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1374,10 +1429,11 @@ TEST Instr_Bit_7_H_FromBootrom()
     using namespace gb4e;
     auto applier = Bit(7, RegisterName::H);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0x80);
     state.Set8BitRegisterValue(GetRegister(RegisterName::H), 0x9f);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
@@ -1392,12 +1448,13 @@ TEST Instr_JrNzS8_FromBootrom()
     using namespace gb4e;
     auto applier = JrNFlagS8(0b10000000);
     GbCpuState state;
+    MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x000a);
     state.SetFlags(0b00100000);
-    state.Set8BitMemoryValue(0x000a, 0x20);
-    state.Set8BitMemoryValue(0x000b, 0xFB);
+    memory.Write(0x000a, 0x20);
+    memory.Write(0x000b, 0xFB);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
@@ -1414,10 +1471,11 @@ TEST Instr_Bit_7_H_FromBootrom_Break()
     using namespace gb4e;
     auto applier = Bit(7, RegisterName::H);
     GbCpuState state;
+    MemoryStateFake memory;
     state.SetFlags(0x20);
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x7fff);
 
-    auto result = applier(&state);
+    auto result = applier(&state, &memory);
 
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();

@@ -7,7 +7,7 @@
 
 namespace gb4e
 {
-InstructionApplier APPLIER_NOP = [](GbCpuState const *) { return InstructionResult(); };
+InstructionApplier APPLIER_NOP = [](GbCpuState const *, MemoryState const *) { return InstructionResult(); };
 
 Instruction const INSTR_INVALID(0xD3, 0x00, "INVALID", 1, 0, APPLIER_NOP);
 

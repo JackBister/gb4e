@@ -14,6 +14,18 @@
       "preLaunchTask": "msbuild"
     },
     {
+      "name": "(Windows) Launch Release w/ Debug Info",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "build/RelWithDebInfo/Main.exe",
+      "args": ["pokemon-crystal.gbc"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true,
+      "preLaunchTask": "msbuild_RelWithDebInfo"
+    },
+    {
       "name": "(Windows) Launch Tests",
       "type": "cppvsdbg",
       "request": "launch",

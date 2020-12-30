@@ -4,6 +4,7 @@
 
 #include "GbCpuState.hh"
 #include "Instruction.hh"
+#include "MemoryState.hh"
 #include "UiCommon.hh"
 
 int constexpr INSTRUCTION_STRING_MAX_LENGTH = 64;
@@ -25,7 +26,7 @@ void InitInstructionWatch()
     }
 }
 
-void DrawInstructionWatch(GbCpuState const * state)
+void DrawInstructionWatch(GbCpuState const * state, MemoryState const * memory)
 {
     if (!showInstructionWatch) {
         return;
@@ -48,7 +49,7 @@ void DrawInstructionWatch(GbCpuState const * state)
             if (addr == pc) {
                 currentInstructionIdx = i;
             }
-            u16 instructionWord = state->Get16BitMemoryValue(addr);
+            u16 instructionWord = memory->Read16(addr);
             auto instruction = DecodeInstruction(instructionWord);
             snprintf(instructions[i],
                      INSTRUCTION_STRING_MAX_LENGTH,

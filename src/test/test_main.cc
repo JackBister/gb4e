@@ -3,6 +3,7 @@
 
 #include "greatest.h"
 
+#include "Gpu_test.hh"
 #include "Instruction_test.hh"
 
 #pragma warning(push)
@@ -16,6 +17,7 @@ int main(int argc, char ** argv)
     GREATEST_MAIN_BEGIN();
 
     RUN_SUITE(Instruction_test);
+    RUN_SUITE(Gpu_test);
 
     GREATEST_MAIN_END();
 }

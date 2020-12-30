@@ -1,14 +1,12 @@
-#include "GbRenderer.hh"
+#include "Renderer.hh"
 
 #include <cassert>
 
+#include "Common.hh"
 #include "GbCpuState.hh"
 #include "logging/Logger.hh"
 
 static auto const logger = Logger::Create("GbRenderer");
-
-int constexpr SCREEN_WIDTH = 160;
-int constexpr SCREEN_HEIGHT = 144;
 
 char const * const VERT_SHADER = R"!!!(
 #version 150
@@ -40,10 +38,10 @@ void main() {
 
 // clang-format off
 float const QUAD_VBO[] = {
-    -1.0f,  1.0f, 0.0f, 1.0f, // Top left
-     1.0f,  1.0f, 1.0f, 1.0f, // Top right
-     1.0f, -1.0f, 1.0f, 0.0f, // Bottom right
-    -1.0f, -1.0f, 0.0f, 0.0f, // Bottom left
+    -1.0f,  1.0f, 0.0f, 0.0f, // Top left
+     1.0f,  1.0f, 1.0f, 0.0f, // Top right
+     1.0f, -1.0f, 1.0f, 1.0f, // Bottom right
+    -1.0f, -1.0f, 0.0f, 1.0f, // Bottom left
 };
 // clang-format on
 
@@ -51,12 +49,6 @@ u32 const QUAD_EBO[] = {0, 1, 2, 2, 3, 0};
 
 namespace gb4e
 {
-
-struct Pixel {
-    u8 r, g, b, a;
-};
-
-Pixel pixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 
 GbRenderer::GbRenderer()
 {
@@ -99,22 +91,17 @@ GbRenderer::GbRenderer()
     logger->Infof("GbRenderer constructor end");
 }
 
-void GbRenderer::RenderFramebuffer(GbCpuState const * state)
+void GbRenderer::CopyFramebuffer(std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const & framebuffer)
 {
-    for (int y = 0; y < SCREEN_HEIGHT; ++y) {
-        for (int x = 0; x < SCREEN_WIDTH; ++x) {
-            auto & pixel = pixels[y][x];
-            pixel.r = x;
-            pixel.b = y;
-            pixel.g = 0;
-            pixel.a = 0xFF;
-        }
-    }
+    memcpy(&this->framebuffer[0], &framebuffer[0], SCREEN_HEIGHT * SCREEN_WIDTH * sizeof(u32));
+}
 
+void GbRenderer::Draw()
+{
     glUseProgram(program);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, &framebuffer[0]);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBindVertexArray(vao);

@@ -9,6 +9,8 @@
 
 namespace gb4e
 {
+class GbCpuState;
+class MemoryState;
 
 class FlagSet
 {
@@ -175,4 +177,6 @@ private:
     u8 consumedBytes;
     u8 consumedCycles;
 };
+
+void ApplyInstructionResult(GbCpuState *, MemoryState *, InstructionResult const &);
 };

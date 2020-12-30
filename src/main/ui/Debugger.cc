@@ -1,10 +1,14 @@
 #include "Debugger.hh"
 
-#include <imgui.h>
 #include <set>
+
+#include <imgui.h>
 
 #include "GbCpu.hh"
 #include "UiCommon.hh"
+#include "logging/Logger.hh"
+
+static auto const logger = Logger::Create("ui::Debugger");
 
 int constexpr BREAKPOINT_BUF_SIZE = 12;
 
@@ -15,28 +19,29 @@ int deltaTimeNs = 250;
 
 char breakpointBuf[BREAKPOINT_BUF_SIZE];
 
-bool isRunningToBreakpoint = false;
-
 void DrawDebugger(GbCpu * cpu)
 {
     if (!showDebugger) {
         return;
     }
     if (ImGui::Begin("Debugger")) {
-        if (isRunningToBreakpoint) {
-            cpu->Tick(10000000);
-            auto regPc = GetRegister(RegisterName::PC);
-            auto const & breakpoints = cpu->GetBreakpoints();
-            if (breakpoints.find(cpu->GetState()->Get16BitRegisterValue(regPc)) != breakpoints.end()) {
-                isRunningToBreakpoint = false;
-            }
+        auto regPc = GetRegister(RegisterName::PC);
+        auto const & breakpoints = cpu->GetBreakpoints();
+        if (breakpoints.find(cpu->GetState()->Get16BitRegisterValue(regPc)) != breakpoints.end()) {
+            isRunning = false;
         }
 
-        // For now this ticks the CPU until a breakpoint is hit
-        // This is not the way this should be done since it will block the UI thread until the breakpoint is hit
-        // which could lead to a hard lock.
-        if (ImGui::Button("TODO: Run") && !cpu->GetBreakpoints().empty()) {
-            isRunningToBreakpoint = true;
+        if (isRunning) {
+            if (ImGui::Button("Break")) {
+                isRunning = false;
+            }
+        } else {
+            if (ImGui::Button("Run")) {
+                isRunning = true;
+            }
+            if (ImGui::Button("Reset")) {
+                cpu->Reset();
+            }
         }
 
         ImGui::InputInt("elapsed time NS", &deltaTimeNs);

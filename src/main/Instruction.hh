@@ -9,8 +9,9 @@
 namespace gb4e
 {
 class GbCpuState;
+class MemoryState;
 
-using InstructionApplier = std::function<InstructionResult(GbCpuState const *)>;
+using InstructionApplier = std::function<InstructionResult(GbCpuState const *, MemoryState const *)>;
 
 class Instruction
 {

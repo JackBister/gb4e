@@ -18,6 +18,7 @@ void DrawNavbar()
         ImGui::MenuItem("Debugger", nullptr, &showDebugger);
         ImGui::MenuItem("Console", nullptr, &showConsole);
         ImGui::MenuItem("Memory", nullptr, &showMemoryWatch);
+        ImGui::MenuItem("Metrics", nullptr, &showMetrics);
 
         ImGui::EndMainMenuBar();
     }

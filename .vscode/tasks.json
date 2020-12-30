@@ -84,6 +84,19 @@
       }
     },
     {
+      "label": "msbuild_RelWithDebInfo",
+      "type": "shell",
+      "dependsOn": "cmake",
+      "windows": {
+        "command": "msbuild",
+        "args": ["ALL_BUILD.vcxproj", "/property:Configuration=RelWithDebInfo"],
+        "options": {
+          "cwd": "${workspaceFolder}/build"
+        },
+        "problemMatcher": ["$msCompile"]
+      }
+    },
+    {
       "label": "test",
       "dependsOn": ["msbuild"],
       "type": "shell",

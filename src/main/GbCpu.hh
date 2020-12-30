@@ -8,9 +8,12 @@
 
 #include "Common.hh"
 #include "GbCpuState.hh"
+#include "GbGpuState.hh"
+#include "MemoryState.hh"
 
 namespace gb4e
 {
+class Renderer;
 class RomFile;
 
 class GbCpu
@@ -19,7 +22,9 @@ public:
     /**
      * bootrom must be 256 bytes long and must be valid for as long as the CPU is running
      */
-    static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom);
+    static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, Renderer * renderer);
+
+    void Reset();
 
     /**
      * The CPU will keep a reference to romFile, meaning romFile must be a valid pointer for as long as the CPU is
@@ -27,20 +32,23 @@ public:
      */
     void LoadRom(RomFile const * romFile);
 
-    void Tick(u64 deltaTimeNs);
+    int Tick(u64 deltaTimeNs);
 
     std::string DumpInstructions(u16 startAddress, u16 endAddress);
 
     GbCpuState const * GetState() const { return state.get(); }
+    MemoryState const * GetMemory() const { return memoryState.get(); }
 
     void AddBreakpoint(u16 breakpoint) { breakpoints.emplace(breakpoint); }
     void RemoveBreakpoint(u16 breakpoint) { breakpoints.erase(breakpoint); }
     std::set<u16> const & GetBreakpoints() const { return breakpoints; }
 
 private:
-    GbCpu(size_t bootromSize, u8 const * bootrom);
+    GbCpu(size_t bootromSize, u8 const * bootrom, Renderer * renderer);
 
     std::unique_ptr<GbCpuState> state;
+    std::unique_ptr<GbGpuState> gpuState;
+    std::unique_ptr<MemoryState> memoryState;
 
     RomFile const * loadedRom;
 

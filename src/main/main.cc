@@ -8,9 +8,9 @@
 #include <imgui.h>
 
 #include "GbCpu.hh"
-#include "GbRenderer.hh"
 #include "InputSystem.hh"
 #include "Instruction.hh"
+#include "Renderer.hh"
 #include "SlurpFile.hh"
 #include "logging/Logger.hh"
 #include "romfile/RomFileLoader.hh"
@@ -19,8 +19,10 @@
 #include "ui/Debugger.hh"
 #include "ui/InstructionWatch.hh"
 #include "ui/MemoryWatch.hh"
+#include "ui/Metrics.hh"
 #include "ui/Navbar.hh"
 #include "ui/RegisterWatch.hh"
+#include "ui/UiCommon.hh"
 #include "ui/imgui_backend/imgui_impl_opengl3.hh"
 
 using namespace std::chrono_literals;
@@ -83,7 +85,8 @@ int main(int argc, char ** argv)
 
     logger->Infof("%s", romFileOpt.value().ToString().c_str());
 
-    std::optional<gb4e::GbCpu> gbCpuOpt = gb4e::GbCpu::Create(bootrom.value().size, bootrom.value().arr.get());
+    std::optional<gb4e::GbCpu> gbCpuOpt =
+        gb4e::GbCpu::Create(bootrom.value().size, bootrom.value().arr.get(), &gbRenderer);
     if (!gbCpuOpt.has_value()) {
         logger->Errorf("Failed to create GbCpu");
         return 1;
@@ -91,6 +94,7 @@ int main(int argc, char ** argv)
 
     gb4e::GbCpu gbCpu = std::move(gbCpuOpt.value());
 
+    gbCpu.LoadRom(&romFile);
     gbCpu.DumpInstructions(0x00, 0xA8);
     gbCpu.DumpInstructions(0xe0, 0xFF);
 
@@ -106,19 +110,24 @@ int main(int argc, char ** argv)
 
         inputSystem.Tick();
 
+        if (gb4e::ui::isRunning) {
+            gb4e::ui::cyclesPerFrame = gbCpu.Tick(16666666);
+        }
+
         gb4e::ui::DrawNavbar();
         gb4e::ui::DrawRegisterWatch(gbCpu.GetState());
-        gb4e::ui::DrawInstructionWatch(gbCpu.GetState());
+        gb4e::ui::DrawInstructionWatch(gbCpu.GetState(), gbCpu.GetMemory());
         gb4e::ui::DrawDebugger(&gbCpu);
         gb4e::ui::DrawConsole();
-        gb4e::ui::DrawMemoryWatch(gbCpu.GetState());
+        gb4e::ui::DrawMemoryWatch(gbCpu.GetState(), gbCpu.GetMemory());
+        gb4e::ui::DrawMetrics();
 
         ImGui::Render();
         SDL_GetWindowSize(sdlWindow, &windowWidth, &windowHeight);
         glViewport(0, 0, windowWidth, windowHeight);
         glClearColor(0, 0, 0xFF, 0xFF);
         glClear(GL_COLOR_BUFFER_BIT);
-        gbRenderer.RenderFramebuffer(gbCpu.GetState());
+        gbRenderer.Draw();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(sdlWindow);

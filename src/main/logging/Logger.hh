@@ -6,7 +6,7 @@
 
 class LogAppender;
 
-class Logger
+class Logger final
 {
 public:
     Logger(std::string name, std::shared_ptr<LogAppender> appender);
