@@ -14,6 +14,7 @@ u64 applyMemoryTimeNs = 0;
 u64 applyRegistersTimeNs = 0;
 u64 applyPcTimeNs = 0;
 u64 gpuCycleTimeNs = 0;
+u64 audioCallbackTimeNs = 0;
 int cyclesPerFrame = 0;
 
 void DrawMetrics()
@@ -31,6 +32,7 @@ void DrawMetrics()
         ImGui::Text("applyMemoryTimeNs: %zu", applyMemoryTimeNs);
         ImGui::Text("applyRegistersTimeNs: %zu", applyRegistersTimeNs);
         ImGui::Text("applyPcTimeNs: %zu", applyPcTimeNs);
+        ImGui::Text("audioCallbackTimeNs: %zu", audioCallbackTimeNs);
     }
     ImGui::End();
 }

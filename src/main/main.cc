@@ -37,6 +37,13 @@ int main(int argc, char ** argv)
         return 0;
     }
 
+#ifdef _WIN32
+    // Necessary(?) to get audio to play on Windows
+    // At least on my machine it wouldn't play without this. Could let the user set it before running the program but
+    // that doesn't seem very user friendly.
+    putenv("SDL_AUDIODRIVER=winmm");
+#endif
+
     if (SDL_Init(SDL_INIT_EVERYTHING)) {
         logger->Errorf("Failed to init SDL");
         return 1;
@@ -86,7 +93,7 @@ int main(int argc, char ** argv)
     logger->Infof("%s", romFileOpt.value().ToString().c_str());
 
     std::optional<gb4e::GbCpu> gbCpuOpt =
-        gb4e::GbCpu::Create(bootrom.value().size, bootrom.value().arr.get(), &gbRenderer);
+        gb4e::GbCpu::Create(bootrom.value().size, bootrom.value().arr.get(), gb4e::GbModel::DMG, &gbRenderer);
     if (!gbCpuOpt.has_value()) {
         logger->Errorf("Failed to create GbCpu");
         return 1;

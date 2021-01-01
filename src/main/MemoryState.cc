@@ -4,6 +4,7 @@
 
 #include "GbCpuState.hh"
 #include "GbGpuState.hh"
+#include "audio/GbApuState.hh"
 
 namespace gb4e
 {
@@ -30,6 +31,10 @@ u8 GbMemoryState::Read(u16 location) const
     if (gpuValue.has_value()) {
         return gpuValue.value();
     }
+    auto apuValue = apu->ReadMemory(location);
+    if (apuValue.has_value()) {
+        return apuValue.value();
+    }
     auto cpuValue = cpu->ReadMemory(location);
     if (cpuValue.has_value()) {
         return cpuValue.value();
@@ -48,5 +53,6 @@ void GbMemoryState::Write(u16 location, u8 value)
 {
     cpu->WriteMemory(location, value);
     gpu->WriteMemory(location, value);
+    apu->WriteMemory(location, value);
 }
 }

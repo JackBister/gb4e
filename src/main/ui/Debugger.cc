@@ -54,9 +54,11 @@ void DrawDebugger(GbCpu * cpu)
         ImGui::SameLine();
         if (ImGui::Button("Add")) {
             std::string breakpointString(breakpointBuf);
-            u16 breakpoint = std::stoi(breakpointString, nullptr, 16);
-            cpu->AddBreakpoint(breakpoint);
-            breakpointBuf[0] = '\0';
+            if (!breakpointString.empty()) {
+                u16 breakpoint = std::stoi(breakpointString, nullptr, 16);
+                cpu->AddBreakpoint(breakpoint);
+                breakpointBuf[0] = '\0';
+            }
         }
 
         std::set<u16> removed;

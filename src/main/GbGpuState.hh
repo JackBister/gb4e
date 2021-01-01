@@ -53,7 +53,7 @@ struct Pixel {
 class GbGpuState
 {
 public:
-    GbGpuState(Renderer * renderer) : renderer(renderer) {}
+    GbGpuState(GbModel gbModel, Renderer * renderer);
 
     void Reset();
 
@@ -91,7 +91,7 @@ private:
 
     // 0xFF47
     // Unused in GBC mode
-    u8 bgp = 0xfc;
+    u8 bgp[4];
 
     // FF4A
     u8 windowY = 0;
@@ -115,6 +115,6 @@ private:
     // When drawing a scanline, the current background tile will be loaded here when it is needed
     Background currentBackground;
 
-    Renderer * renderer;
+    GbModel gbModel;
 };
 };

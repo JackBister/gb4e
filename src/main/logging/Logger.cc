@@ -17,6 +17,7 @@ std::unique_ptr<Logger> Logger::Create(std::string const & name)
 
 void Logger::Tracef(char const * format, ...)
 {
+    return;
     va_list args;
     va_start(args, format);
     auto messageString = Sprintf(format, args);

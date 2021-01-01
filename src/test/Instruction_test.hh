@@ -953,7 +953,7 @@ TEST Instr_RetNz_Jump()
     ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister()->GetRegisterName());
     ASSERT_EQ(0x01, regWritePc.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWritePc.GetWordValue());
-    ASSERT_EQ(1, result.GetConsumedBytes());
+    ASSERT_EQ(0, result.GetConsumedBytes());
     ASSERT_EQ(5, result.GetConsumedCycles());
     PASS();
 }
@@ -1074,7 +1074,7 @@ TEST Instr_Ret()
     ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister()->GetRegisterName());
     ASSERT_EQ(0x01, regWritePc.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWritePc.GetWordValue());
-    ASSERT_EQ(1, result.GetConsumedBytes());
+    ASSERT_EQ(0, result.GetConsumedBytes());
     ASSERT_EQ(4, result.GetConsumedCycles());
     PASS();
 }

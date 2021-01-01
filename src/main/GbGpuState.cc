@@ -10,12 +10,22 @@ static auto const logger = Logger::Create("GbGpuState");
 namespace gb4e
 {
 
+static u32 const DMG_COLOR_PALETTE[] = {0xFFFFFFFF, 0xFFC0C0C0, 0xFF606060, 0xFF000000};
+
+GbGpuState::GbGpuState(GbModel gbModel, Renderer * renderer) : gbModel(gbModel)
+{
+    renderer->SetFramebuffer(&this->framebuffer);
+}
+
 void GbGpuState::Reset()
 {
     lcdc = 0x91;
     scrollY = 0;
     scrollX = 0;
-    bgp = 0xfc;
+    bgp[0] = 0b00;
+    bgp[1] = 0b11;
+    bgp[2] = 0b11;
+    bgp[3] = 0b11;
     windowY = 0;
     windowX = 0;
     vramBank = 0;
@@ -54,7 +64,12 @@ std::optional<u8> GbGpuState::ReadMemory(u16 location) const
     } else if (location == 0xFF44) {
         return currentScanline;
     } else if (location == 0xFF47) {
-        return bgp;
+        u8 ret = 0;
+        ret |= (bgp[0] << 0) & 0b11;
+        ret |= (bgp[1] << 2) & 0b1100;
+        ret |= (bgp[2] << 4) & 0b110000;
+        ret |= (bgp[3] << 6) & 0b11000000;
+        return ret;
     } else if (location == 0xFF4A) {
         return windowY;
     } else if (location == 0xFF4B) {
@@ -85,7 +100,10 @@ bool GbGpuState::WriteMemory(u16 location, u8 value)
         scrollX = value;
         return true;
     } else if (location == 0xFF47) {
-        bgp = value;
+        bgp[0] = BITS<0, 1>(value);
+        bgp[1] = BITS<2, 3>(value) >> 2;
+        bgp[2] = BITS<4, 5>(value) >> 4;
+        bgp[3] = BITS<6, 7>(value) >> 6;
         return true;
     } else if (location == 0xFF4A) {
         windowY = value;
@@ -144,7 +162,6 @@ void GbGpuState::CycleHblank()
     if (modeCycles == HBLANK_CYCLES) {
         currentScanline++;
         if (currentScanline == 143) {
-            renderer->CopyFramebuffer(framebuffer);
             mode = GbGpuMode::VBLANK;
             modeCycles = 0;
         } else {
@@ -178,7 +195,7 @@ void GbGpuState::DrawScanlinePixel(u8 x)
     Pixel bg = DrawScanlineBackground(x);
 
     u16 framebufferIdx = currentScanline * SCREEN_WIDTH + x;
-    framebuffer[framebufferIdx] = bg.color | bg.color << 8 | bg.color << 16 | 0xFF << 24;
+    framebuffer[framebufferIdx] = DMG_COLOR_PALETTE[bg.color];
 }
 
 Pixel GbGpuState::DrawScanlineBackground(u8 scanX)
@@ -197,11 +214,7 @@ Pixel GbGpuState::DrawScanlineBackground(u8 scanX)
     u16 index = GetColorIndex(currentBackground.data, xInTile);
 
     Pixel ret;
-    u8 colors[] = {0xFF, 0xC0, 0x60, 0};
-    ret.color = colors[index];
-    if (scanX == 128 && currentScanline == 64) {
-        ret.color = 0xFF0000FF;
-    }
+    ret.color = bgp[index];
     // bg.palette = index;
     /*
     u8 paletteNumber = BITS<0, BG_PALETTE_NUMBER_MAX>(currentBackground.attributes);
@@ -222,7 +235,7 @@ Background GbGpuState::LoadTile(u16 tilemapLocation, u16 x, u16 y)
 {
     Background ret;
 
-    u16 tmaddr = 0x1800 + (((lcdc & LCDC_BG_HIGH_TILEMAP) >> 3) << 10), tdaddr;
+    u16 tmaddr = tilemapLocation, tdaddr;
     tmaddr += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
     if ((lcdc & LCDC_8000_ADDRESS_MODE) == 0) {
         tdaddr = 0x1000 + ((s8)bank0[tmaddr] << 4);

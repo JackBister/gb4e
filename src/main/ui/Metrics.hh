@@ -12,6 +12,7 @@ extern u64 applyMemoryTimeNs;
 extern u64 applyRegistersTimeNs;
 extern u64 applyPcTimeNs;
 extern u64 gpuCycleTimeNs;
+extern u64 audioCallbackTimeNs;
 extern int cyclesPerFrame;
 
 void DrawMetrics();

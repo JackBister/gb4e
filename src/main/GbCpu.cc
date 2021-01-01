@@ -11,17 +11,14 @@
 
 auto const logger = Logger::Create("GbCpu");
 
-u64 constexpr CLOCK_FREQUENCY = 4194304;
-u64 constexpr CYCLE_DURATION_NS = (1000000000 / CLOCK_FREQUENCY) * 4;
-
 namespace gb4e
 {
 
-std::optional<GbCpu> GbCpu::Create(size_t bootromSize, u8 const * bootrom, Renderer * renderer)
+std::optional<GbCpu> GbCpu::Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer)
 {
     logger->Infof("CLOCK_FREQUENCY=%zu, CYCLE_DURATION_NS=%zu", CLOCK_FREQUENCY, CYCLE_DURATION_NS);
 
-    return GbCpu(bootromSize, bootrom, renderer);
+    return GbCpu(bootromSize, bootrom, gbModel, renderer);
 }
 
 void GbCpu::Reset()
@@ -73,6 +70,7 @@ int GbCpu::Tick(u64 deltaTimeNs)
         numCycles++;
         waitCycles--;
         auto beforeGpu = std::chrono::high_resolution_clock::now();
+        apuState->TickCycle();
         gpuState->TickCycle();
         gb4e::ui::gpuCycleTimeNs = (std::chrono::high_resolution_clock::now() - beforeGpu).count();
         if (waitCycles > 0) {
@@ -123,10 +121,11 @@ std::string GbCpu::DumpInstructions(u16 startAddress, u16 endAddress)
     return ss.str();
 }
 
-GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, Renderer * renderer)
-    : gpuState(new GbGpuState(renderer)), state(new GbCpuState(bootromSize, bootrom))
+GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer)
+    : apuState(new GbApuState()), gpuState(new GbGpuState(gbModel, renderer)),
+      state(new GbCpuState(bootromSize, bootrom))
 {
-    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get());
+    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get());
     // memcpy_s(&this->state->memory[0], MEMORY_SIZE, bootrom, bootromSize);
 }
 

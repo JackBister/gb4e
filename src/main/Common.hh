@@ -18,6 +18,11 @@ struct SizedArray {
 
 namespace gb4e
 {
+enum class GbModel { DMG, CGB };
+
+u64 constexpr CLOCK_FREQUENCY = 4194304;
+u64 constexpr CYCLE_DURATION_NS = (1000000000 / CLOCK_FREQUENCY) * 4;
+
 size_t constexpr MEMORY_SIZE = 0x10000;
 size_t constexpr VRAM_SIZE = 0x2000;
 

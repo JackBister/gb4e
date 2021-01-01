@@ -10,6 +10,7 @@
 #include "GbCpuState.hh"
 #include "GbGpuState.hh"
 #include "MemoryState.hh"
+#include "audio/GbApuState.hh"
 
 namespace gb4e
 {
@@ -22,7 +23,7 @@ public:
     /**
      * bootrom must be 256 bytes long and must be valid for as long as the CPU is running
      */
-    static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, Renderer * renderer);
+    static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer);
 
     void Reset();
 
@@ -44,8 +45,9 @@ public:
     std::set<u16> const & GetBreakpoints() const { return breakpoints; }
 
 private:
-    GbCpu(size_t bootromSize, u8 const * bootrom, Renderer * renderer);
+    GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer);
 
+    std::unique_ptr<GbApuState> apuState;
     std::unique_ptr<GbCpuState> state;
     std::unique_ptr<GbGpuState> gpuState;
     std::unique_ptr<MemoryState> memoryState;

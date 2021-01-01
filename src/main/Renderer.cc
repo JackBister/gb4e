@@ -91,9 +91,9 @@ GbRenderer::GbRenderer()
     logger->Infof("GbRenderer constructor end");
 }
 
-void GbRenderer::CopyFramebuffer(std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const & framebuffer)
+void GbRenderer::SetFramebuffer(std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * framebuffer)
 {
-    memcpy(&this->framebuffer[0], &framebuffer[0], SCREEN_HEIGHT * SCREEN_WIDTH * sizeof(u32));
+    this->framebuffer = framebuffer;
 }
 
 void GbRenderer::Draw()
@@ -101,7 +101,8 @@ void GbRenderer::Draw()
     glUseProgram(program);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, &framebuffer[0]);
+    glTexSubImage2D(
+        GL_TEXTURE_2D, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, framebuffer->data());
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBindVertexArray(vao);

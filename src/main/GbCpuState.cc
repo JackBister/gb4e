@@ -18,13 +18,6 @@ GbCpuState::GbCpuState(size_t bootromSize, u8 const * bootrom) : bootromSize(boo
     Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x014D);
     Set16BitRegisterValue(GetRegister(RegisterName::SP), 0xFFFE);
     Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x0000);
-
-    memoryWriteHandlers[0xFF11] = StubMemoryWriteHandler("Channel 1 Sound length/Wave pattern duty");
-    memoryWriteHandlers[0xFF12] = StubMemoryWriteHandler("Channel 1 Volume Envelope");
-    memoryWriteHandlers[0xFF24] = StubMemoryWriteHandler("Channel control / ON-OFF / Volume");
-    memoryWriteHandlers[0xFF25] = StubMemoryWriteHandler("Selection of Sound output terminal");
-    memoryWriteHandlers[0xFF26] = StubMemoryWriteHandler("Sound on/off");
-    memoryWriteHandlers[0xFF41] = StubMemoryWriteHandler("STAT - LCDC Status");
 }
 
 void GbCpuState::Reset()
