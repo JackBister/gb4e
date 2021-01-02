@@ -67,6 +67,10 @@ public:
 
     CartridgeType const * GetCartridgeType() const { return cartridgeType; }
 
+    RomSize const * GetRomSize() const { return romSize; }
+
+    RamSize const * GetRamSize() const { return ramSize; }
+
     size_t const & GetSize() const { return size; }
 
     u8 const * GetData() const { return data.get(); }

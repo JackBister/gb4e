@@ -9,7 +9,7 @@
 TEST Instr_Ld_B_A()
 {
     using namespace gb4e;
-    auto applier = Ld(RegisterName::B, RegisterName::A);
+    auto applier = Ld<RegisterName::B, RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -23,7 +23,7 @@ TEST Instr_Ld_B_A()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::B, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::B, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -34,7 +34,7 @@ TEST Instr_Ld_B_A()
 TEST Instr_Ld_SP_D16()
 {
     using namespace gb4e;
-    auto applier = LdD16(RegisterName::SP);
+    auto applier = LdD16<RegisterName::SP>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0);
@@ -49,7 +49,7 @@ TEST Instr_Ld_SP_D16()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::SP, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::SP, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0xBEEF, regWrite.GetWordPreviousValue());
     ASSERT_EQ(0xFFFE, regWrite.GetWordValue());
     ASSERT_EQ(3, result.GetConsumedBytes());
@@ -60,7 +60,7 @@ TEST Instr_Ld_SP_D16()
 TEST Instr_Inc_BC()
 {
     using namespace gb4e;
-    auto applier = Inc(RegisterName::BC);
+    auto applier = Inc<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
@@ -72,7 +72,7 @@ TEST Instr_Inc_BC()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetWordPreviousValue());
     ASSERT_EQ(101, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -84,7 +84,7 @@ TEST Instr_Inc_BC()
 TEST Instr_Inc_BC_Wraparound()
 {
     using namespace gb4e;
-    auto applier = Inc(RegisterName::BC);
+    auto applier = Inc<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
@@ -96,7 +96,7 @@ TEST Instr_Inc_BC_Wraparound()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0xFFFF, regWrite.GetWordPreviousValue());
     ASSERT_EQ(0, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -108,7 +108,7 @@ TEST Instr_Inc_BC_Wraparound()
 TEST Instr_Inc_A()
 {
     using namespace gb4e;
-    auto applier = Inc(RegisterName::A);
+    auto applier = Inc<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -120,7 +120,7 @@ TEST Instr_Inc_A()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(5, regWrite.GetBytePreviousValue());
     ASSERT_EQ(6, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -132,7 +132,7 @@ TEST Instr_Inc_A()
 TEST Instr_Inc_A_Wraparound()
 {
     using namespace gb4e;
-    auto applier = Inc(RegisterName::A);
+    auto applier = Inc<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -144,7 +144,7 @@ TEST Instr_Inc_A_Wraparound()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0xFF, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -156,7 +156,7 @@ TEST Instr_Inc_A_Wraparound()
 TEST Instr_Inc_A_HalfCarry()
 {
     using namespace gb4e;
-    auto applier = Inc(RegisterName::A);
+    auto applier = Inc<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -168,7 +168,7 @@ TEST Instr_Inc_A_HalfCarry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b00001111, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b00010000, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -180,7 +180,7 @@ TEST Instr_Inc_A_HalfCarry()
 TEST Instr_Inc_A_PreservesCarry()
 {
     using namespace gb4e;
-    auto applier = Inc(RegisterName::A);
+    auto applier = Inc<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -194,7 +194,7 @@ TEST Instr_Inc_A_PreservesCarry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(5, regWrite.GetBytePreviousValue());
     ASSERT_EQ(6, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -206,7 +206,7 @@ TEST Instr_Inc_A_PreservesCarry()
 TEST Instr_Dec_BC()
 {
     using namespace gb4e;
-    auto applier = Dec(RegisterName::BC);
+    auto applier = Dec<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
@@ -218,7 +218,7 @@ TEST Instr_Dec_BC()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetWordPreviousValue());
     ASSERT_EQ(99, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -230,7 +230,7 @@ TEST Instr_Dec_BC()
 TEST Instr_Dec_BC_Wraparound()
 {
     using namespace gb4e;
-    auto applier = Dec(RegisterName::BC);
+    auto applier = Dec<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
@@ -242,7 +242,7 @@ TEST Instr_Dec_BC_Wraparound()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0, regWrite.GetWordPreviousValue());
     ASSERT_EQ(0xFFFF, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -254,7 +254,7 @@ TEST Instr_Dec_BC_Wraparound()
 TEST Instr_Dec_A()
 {
     using namespace gb4e;
-    auto applier = Dec(RegisterName::A);
+    auto applier = Dec<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -266,7 +266,7 @@ TEST Instr_Dec_A()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(5, regWrite.GetBytePreviousValue());
     ASSERT_EQ(4, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -278,7 +278,7 @@ TEST Instr_Dec_A()
 TEST Instr_Dec_A_Zero()
 {
     using namespace gb4e;
-    auto applier = Dec(RegisterName::A);
+    auto applier = Dec<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -290,7 +290,7 @@ TEST Instr_Dec_A_Zero()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(1, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -302,7 +302,7 @@ TEST Instr_Dec_A_Zero()
 TEST Instr_Dec_A_Wraparound()
 {
     using namespace gb4e;
-    auto applier = Dec(RegisterName::A);
+    auto applier = Dec<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -314,7 +314,7 @@ TEST Instr_Dec_A_Wraparound()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0xFF, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -326,7 +326,7 @@ TEST Instr_Dec_A_Wraparound()
 TEST Instr_Dec_A_PreservesCarry()
 {
     using namespace gb4e;
-    auto applier = Dec(RegisterName::A);
+    auto applier = Dec<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -340,7 +340,7 @@ TEST Instr_Dec_A_PreservesCarry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(5, regWrite.GetBytePreviousValue());
     ASSERT_EQ(4, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -353,7 +353,7 @@ TEST Instr_LdD8_A()
 {
 
     using namespace gb4e;
-    auto applier = LdD8(RegisterName::A);
+    auto applier = LdD8<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -368,7 +368,7 @@ TEST Instr_LdD8_A()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -380,7 +380,7 @@ TEST Instr_LdD8_A()
 TEST Instr_LdD16_BC()
 {
     using namespace gb4e;
-    auto applier = LdD16(RegisterName::BC);
+    auto applier = LdD16<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regBC = GetRegister(RegisterName::BC);
@@ -396,7 +396,7 @@ TEST Instr_LdD16_BC()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::BC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWrite.GetWordValue());
     ASSERT_EQ(3, result.GetConsumedBytes());
@@ -408,7 +408,7 @@ TEST Instr_LdD16_BC()
 TEST Instr_Rla_NoCarry()
 {
     using namespace gb4e;
-    auto applier = Rla();
+    auto applier = Rla;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -422,7 +422,7 @@ TEST Instr_Rla_NoCarry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b00000001, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b00000010, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -434,7 +434,7 @@ TEST Instr_Rla_NoCarry()
 TEST Instr_Rla_Carry()
 {
     using namespace gb4e;
-    auto applier = Rla();
+    auto applier = Rla;
     GbCpuState state;
     MemoryStateFake memory;
     auto regA = GetRegister(RegisterName::A);
@@ -448,7 +448,7 @@ TEST Instr_Rla_Carry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b10000000, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b00000001, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -460,7 +460,7 @@ TEST Instr_Rla_Carry()
 TEST Instr_JrS8()
 {
     using namespace gb4e;
-    auto applier = JrS8();
+    auto applier = JrS8;
     GbCpuState state;
     MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
@@ -474,7 +474,7 @@ TEST Instr_JrS8()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0, regWrite.GetWordPreviousValue());
     ASSERT_EQ(100, regWrite.GetWordValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -486,7 +486,7 @@ TEST Instr_JrS8()
 TEST Instr_LdFromAddrReg_A_DE()
 {
     using namespace gb4e;
-    auto applier = LdFromAddrReg(RegisterName::A, RegisterName::DE);
+    auto applier = LdFromAddrReg<RegisterName::A, RegisterName::DE>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
@@ -499,7 +499,7 @@ TEST Instr_LdFromAddrReg_A_DE()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -511,7 +511,7 @@ TEST Instr_LdFromAddrReg_A_DE()
 TEST Instr_JrNzS8_Jump()
 {
     using namespace gb4e;
-    auto applier = JrNFlagS8(0b10000000);
+    auto applier = JrNFlagS8<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
@@ -526,7 +526,7 @@ TEST Instr_JrNzS8_Jump()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0, regWrite.GetWordPreviousValue());
     ASSERT_EQ(100, regWrite.GetWordValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -538,7 +538,7 @@ TEST Instr_JrNzS8_Jump()
 TEST Instr_JrNzS8_NoJump()
 {
     using namespace gb4e;
-    auto applier = JrNFlagS8(0b10000000);
+    auto applier = JrNFlagS8<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
@@ -561,7 +561,7 @@ TEST Instr_JrNzS8_NoJump()
 TEST Instr_LdHlPlus_A()
 {
     using namespace gb4e;
-    auto applier = LdHlIncDecA(1);
+    auto applier = LdHlIncDecA<1>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regHL = GetRegister(RegisterName::HL);
@@ -579,7 +579,7 @@ TEST Instr_LdHlPlus_A()
     ASSERT_EQ(123, memWrite.GetValue());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::HL, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::HL, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0x1, regWrite.GetWordPreviousValue());
     ASSERT_EQ(0x2, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -591,7 +591,7 @@ TEST Instr_LdHlPlus_A()
 TEST Instr_LdHlMinus_A()
 {
     using namespace gb4e;
-    auto applier = LdHlIncDecA(-1);
+    auto applier = LdHlIncDecA<-1>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regHL = GetRegister(RegisterName::HL);
@@ -609,7 +609,7 @@ TEST Instr_LdHlMinus_A()
     ASSERT_EQ(123, memWrite.GetValue());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::HL, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::HL, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0x1, regWrite.GetWordPreviousValue());
     ASSERT_EQ(0x0, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -621,7 +621,7 @@ TEST Instr_LdHlMinus_A()
 TEST Instr_LdMemViaReg_C_A()
 {
     using namespace gb4e;
-    auto applier = LdMemViaReg(RegisterName::C, RegisterName::A);
+    auto applier = LdMemViaReg<RegisterName::C, RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::C), 0xBA);
@@ -645,7 +645,7 @@ TEST Instr_LdMemViaReg_C_A()
 TEST Instr_LdMemViaReg_HL_B()
 {
     using namespace gb4e;
-    auto applier = LdMemViaReg(RegisterName::HL, RegisterName::B);
+    auto applier = LdMemViaReg<RegisterName::HL, RegisterName::B>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0xBEEF);
@@ -669,7 +669,7 @@ TEST Instr_LdMemViaReg_HL_B()
 TEST Instr_JrZS8_Jump()
 {
     using namespace gb4e;
-    auto applier = JrFlagS8(0b10000000);
+    auto applier = JrFlagS8<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
@@ -684,7 +684,7 @@ TEST Instr_JrZS8_Jump()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0, regWrite.GetWordPreviousValue());
     ASSERT_EQ(100, regWrite.GetWordValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -696,7 +696,7 @@ TEST Instr_JrZS8_Jump()
 TEST Instr_JrZS8_NoJump()
 {
     using namespace gb4e;
-    auto applier = JrFlagS8(0b10000000);
+    auto applier = JrFlagS8<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     auto regPC = GetRegister(RegisterName::PC);
@@ -719,7 +719,7 @@ TEST Instr_JrZS8_NoJump()
 TEST Instr_Add_A_B()
 {
     using namespace gb4e;
-    auto applier = Add(RegisterName::A, RegisterName::B);
+    auto applier = Add<RegisterName::A, RegisterName::B>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
@@ -731,7 +731,7 @@ TEST Instr_Add_A_B()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -742,7 +742,7 @@ TEST Instr_Add_A_B()
 TEST Instr_Add_HL_BC()
 {
     using namespace gb4e;
-    auto applier = Add(RegisterName::HL, RegisterName::BC);
+    auto applier = Add<RegisterName::HL, RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 100);
@@ -754,7 +754,7 @@ TEST Instr_Add_HL_BC()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::HL, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::HL, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetWordPreviousValue());
     ASSERT_EQ(123, regWrite.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -765,7 +765,7 @@ TEST Instr_Add_HL_BC()
 TEST Instr_AddFromAddrReg_A_HL()
 {
     using namespace gb4e;
-    auto applier = AddFromAddrReg(RegisterName::A, RegisterName::HL);
+    auto applier = AddFromAddrReg<RegisterName::A, RegisterName::HL>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
@@ -778,7 +778,7 @@ TEST Instr_AddFromAddrReg_A_HL()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -789,7 +789,7 @@ TEST Instr_AddFromAddrReg_A_HL()
 TEST Instr_Sub_B()
 {
     using namespace gb4e;
-    auto applier = Sub(RegisterName::B);
+    auto applier = Sub<RegisterName::B>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
@@ -801,7 +801,7 @@ TEST Instr_Sub_B()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(90, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -812,7 +812,7 @@ TEST Instr_Sub_B()
 TEST Instr_And_B()
 {
     using namespace gb4e;
-    auto applier = And(RegisterName::B);
+    auto applier = And<RegisterName::B>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 0b10010000);
@@ -824,7 +824,7 @@ TEST Instr_And_B()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b10010000, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b10000000, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -835,7 +835,7 @@ TEST Instr_And_B()
 TEST Instr_Xor_B()
 {
     using namespace gb4e;
-    auto applier = Xor(RegisterName::B);
+    auto applier = Xor<RegisterName::B>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 0b10010000);
@@ -847,7 +847,7 @@ TEST Instr_Xor_B()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b10010000, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b00010001, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -858,7 +858,7 @@ TEST Instr_Xor_B()
 TEST Instr_Or_B()
 {
     using namespace gb4e;
-    auto applier = Or(RegisterName::B);
+    auto applier = Or<RegisterName::B>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 0b10010000);
@@ -870,7 +870,7 @@ TEST Instr_Or_B()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b10010000, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b10010001, regWrite.GetByteValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -881,7 +881,7 @@ TEST Instr_Or_B()
 TEST Instr_CpFromMem_HL_Equals()
 {
     using namespace gb4e;
-    auto applier = CpFromMem(RegisterName::HL);
+    auto applier = CpFromMem<RegisterName::HL>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0);
@@ -905,7 +905,7 @@ TEST Instr_CpFromMem_HL_Equals()
 TEST Instr_CpFromMem_HL_NotEquals()
 {
     using namespace gb4e;
-    auto applier = CpFromMem(RegisterName::HL);
+    auto applier = CpFromMem<RegisterName::HL>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0);
@@ -929,7 +929,7 @@ TEST Instr_CpFromMem_HL_NotEquals()
 TEST Instr_RetNz_Jump()
 {
     using namespace gb4e;
-    auto applier = RetNFlag(0b10000000);
+    auto applier = RetNFlag<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0);
@@ -946,11 +946,11 @@ TEST Instr_RetNz_Jump()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(2, result.GetRegisterWrites().size());
     auto regWriteSp = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister().GetRegisterName());
     ASSERT_EQ(0x10, regWriteSp.GetWordPreviousValue());
     ASSERT_EQ(0x12, regWriteSp.GetWordValue());
     auto regWritePc = result.GetRegisterWrites()[1];
-    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister().GetRegisterName());
     ASSERT_EQ(0x01, regWritePc.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWritePc.GetWordValue());
     ASSERT_EQ(0, result.GetConsumedBytes());
@@ -961,7 +961,7 @@ TEST Instr_RetNz_Jump()
 TEST Instr_RetNz_NoJump()
 {
     using namespace gb4e;
-    auto applier = RetNFlag(0b10000000);
+    auto applier = RetNFlag<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0b10000000);
@@ -985,7 +985,7 @@ TEST Instr_RetNz_NoJump()
 TEST Instr_Pop_BC()
 {
     using namespace gb4e;
-    auto applier = Pop(RegisterName::BC);
+    auto applier = Pop<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto bc = GetRegister(RegisterName::BC);
@@ -1001,11 +1001,11 @@ TEST Instr_Pop_BC()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(2, result.GetRegisterWrites().size());
     auto regWriteSp = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister().GetRegisterName());
     ASSERT_EQ(0x10, regWriteSp.GetWordPreviousValue());
     ASSERT_EQ(0x12, regWriteSp.GetWordValue());
     auto regWriteBc = result.GetRegisterWrites()[1];
-    ASSERT_EQ(RegisterName::BC, regWriteBc.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::BC, regWriteBc.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWriteBc.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWriteBc.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -1016,7 +1016,7 @@ TEST Instr_Pop_BC()
 TEST Instr_Push_BC()
 {
     using namespace gb4e;
-    auto applier = Push(RegisterName::BC);
+    auto applier = Push<RegisterName::BC>;
     GbCpuState state;
     MemoryStateFake memory;
     auto bc = GetRegister(RegisterName::BC);
@@ -1040,7 +1040,7 @@ TEST Instr_Push_BC()
     ASSERT_EQ(0xEF, memWriteLo.GetValue());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWriteSp = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister().GetRegisterName());
     ASSERT_EQ(0x12, regWriteSp.GetWordPreviousValue());
     ASSERT_EQ(0x10, regWriteSp.GetWordValue());
     ASSERT_EQ(1, result.GetConsumedBytes());
@@ -1051,7 +1051,7 @@ TEST Instr_Push_BC()
 TEST Instr_Ret()
 {
     using namespace gb4e;
-    auto applier = Ret();
+    auto applier = Ret;
     GbCpuState state;
     MemoryStateFake memory;
     auto sp = GetRegister(RegisterName::SP);
@@ -1067,11 +1067,11 @@ TEST Instr_Ret()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(2, result.GetRegisterWrites().size());
     auto regWriteSp = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister().GetRegisterName());
     ASSERT_EQ(0x10, regWriteSp.GetWordPreviousValue());
     ASSERT_EQ(0x12, regWriteSp.GetWordValue());
     auto regWritePc = result.GetRegisterWrites()[1];
-    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister().GetRegisterName());
     ASSERT_EQ(0x01, regWritePc.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWritePc.GetWordValue());
     ASSERT_EQ(0, result.GetConsumedBytes());
@@ -1082,7 +1082,7 @@ TEST Instr_Ret()
 TEST Instr_CallA16()
 {
     using namespace gb4e;
-    auto applier = CallA16();
+    auto applier = CallA16;
     GbCpuState state;
     MemoryStateFake memory;
     auto sp = GetRegister(RegisterName::SP);
@@ -1110,11 +1110,11 @@ TEST Instr_CallA16()
     ASSERT_EQ(0x04, memWriteLo.GetValue());
     ASSERT_EQ(2, result.GetRegisterWrites().size());
     auto regWriteSp = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister().GetRegisterName());
     ASSERT_EQ(0x12, regWriteSp.GetWordPreviousValue());
     ASSERT_EQ(0x10, regWriteSp.GetWordValue());
     auto regWritePc = result.GetRegisterWrites()[1];
-    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister().GetRegisterName());
     ASSERT_EQ(0x01, regWritePc.GetWordPreviousValue());
     ASSERT_EQ(0xBEEF, regWritePc.GetWordValue());
     ASSERT_EQ(0, result.GetConsumedBytes());
@@ -1125,7 +1125,7 @@ TEST Instr_CallA16()
 TEST Instr_LdA8()
 {
     using namespace gb4e;
-    auto applier = LdA8();
+    auto applier = LdA8;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
@@ -1151,7 +1151,7 @@ TEST Instr_LdA8()
 TEST Instr_LdA16_A()
 {
     using namespace gb4e;
-    auto applier = LdA16(RegisterName::A);
+    auto applier = LdA16<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 123);
@@ -1178,7 +1178,7 @@ TEST Instr_LdA16_A()
 TEST Instr_LdA16_SP()
 {
     using namespace gb4e;
-    auto applier = LdA16(RegisterName::SP);
+    auto applier = LdA16<RegisterName::SP>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::SP), 0xBABE);
@@ -1210,7 +1210,7 @@ TEST Instr_LdA16_SP()
 TEST Instr_LDFromA8_A()
 {
     using namespace gb4e;
-    auto applier = LdFromA8(RegisterName::A);
+    auto applier = LdFromA8<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
@@ -1225,7 +1225,7 @@ TEST Instr_LDFromA8_A()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -1236,7 +1236,7 @@ TEST Instr_LDFromA8_A()
 TEST Instr_LdFromA16_A()
 {
     using namespace gb4e;
-    auto applier = LdFromA16(RegisterName::A);
+    auto applier = LdFromA16<RegisterName::A>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
@@ -1252,7 +1252,7 @@ TEST Instr_LdFromA16_A()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::A, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(100, regWrite.GetBytePreviousValue());
     ASSERT_EQ(123, regWrite.GetByteValue());
     ASSERT_EQ(3, result.GetConsumedBytes());
@@ -1263,7 +1263,7 @@ TEST Instr_LdFromA16_A()
 TEST Instr_CpD8_Equals()
 {
     using namespace gb4e;
-    auto applier = CpD8();
+    auto applier = CpD8;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0);
@@ -1288,7 +1288,7 @@ TEST Instr_CpD8_Equals()
 TEST Instr_CpD8_NotEquals()
 {
     using namespace gb4e;
-    auto applier = CpD8();
+    auto applier = CpD8;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0);
@@ -1313,7 +1313,7 @@ TEST Instr_CpD8_NotEquals()
 TEST Instr_Rl_C_Carry()
 {
     using namespace gb4e;
-    auto applier = Rl(RegisterName::C);
+    auto applier = Rl<RegisterName::C>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0b00010000);
@@ -1328,7 +1328,7 @@ TEST Instr_Rl_C_Carry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::C, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::C, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b10000000, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b00000001, regWrite.GetByteValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -1339,7 +1339,7 @@ TEST Instr_Rl_C_Carry()
 TEST Instr_Rl_C_NoCarry()
 {
     using namespace gb4e;
-    auto applier = Rl(RegisterName::C);
+    auto applier = Rl<RegisterName::C>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0b00010000);
@@ -1354,7 +1354,7 @@ TEST Instr_Rl_C_NoCarry()
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::C, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::C, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0b01000000, regWrite.GetBytePreviousValue());
     ASSERT_EQ(0b10000001, regWrite.GetByteValue());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -1365,7 +1365,7 @@ TEST Instr_Rl_C_NoCarry()
 TEST Instr_Rl_C_Zero()
 {
     using namespace gb4e;
-    auto applier = Rl(RegisterName::C);
+    auto applier = Rl<RegisterName::C>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0);
@@ -1382,7 +1382,7 @@ TEST Instr_Rl_C_Zero()
 TEST Instr_Bit_7_H_0()
 {
     using namespace gb4e;
-    auto applier = Bit(7, RegisterName::H);
+    auto applier = Bit<7, RegisterName::H>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0b00010000);
@@ -1404,7 +1404,7 @@ TEST Instr_Bit_7_H_0()
 TEST Instr_Bit_7_H_1()
 {
     using namespace gb4e;
-    auto applier = Bit(7, RegisterName::H);
+    auto applier = Bit<7, RegisterName::H>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0b00010000);
@@ -1427,7 +1427,7 @@ TEST Instr_Bit_7_H_FromBootrom()
 {
     // This test should mimic the state the CPU is in when executing the 5th instruction in the bootrom
     using namespace gb4e;
-    auto applier = Bit(7, RegisterName::H);
+    auto applier = Bit<7, RegisterName::H>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0x80);
@@ -1446,7 +1446,7 @@ TEST Instr_JrNzS8_FromBootrom()
 {
     // This test should mimic the state the CPU is in when executing the 6th instruction in the bootrom
     using namespace gb4e;
-    auto applier = JrNFlagS8(0b10000000);
+    auto applier = JrNFlagS8<0b10000000>;
     GbCpuState state;
     MemoryStateFake memory;
     state.Set16BitRegisterValue(GetRegister(RegisterName::PC), 0x000a);
@@ -1458,7 +1458,7 @@ TEST Instr_JrNzS8_FromBootrom()
 
     ASSERT_EQ(1, result.GetRegisterWrites().size());
     auto regWrite = result.GetRegisterWrites()[0];
-    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister()->GetRegisterName());
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
     // The instruction jumps -5 (0xFB twos complement) and then +2 due to consumedbytes being 2
     ASSERT_EQ(0x0005, regWrite.GetWordValue());
 
@@ -1469,7 +1469,7 @@ TEST Instr_Bit_7_H_FromBootrom_Break()
 {
     // This test should mimic the state the CPU is in when exiting the first loop in the bootrom
     using namespace gb4e;
-    auto applier = Bit(7, RegisterName::H);
+    auto applier = Bit<7, RegisterName::H>;
     GbCpuState state;
     MemoryStateFake memory;
     state.SetFlags(0x20);

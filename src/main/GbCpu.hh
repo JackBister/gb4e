@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+#include "Cartridge.hh"
 #include "Common.hh"
 #include "GbCpuState.hh"
 #include "GbGpuState.hh"
@@ -50,6 +51,7 @@ private:
     std::unique_ptr<GbApuState> apuState;
     std::unique_ptr<GbCpuState> state;
     std::unique_ptr<GbGpuState> gpuState;
+    std::unique_ptr<Cartridge> cartridge;
     std::unique_ptr<MemoryState> memoryState;
 
     RomFile const * loadedRom;

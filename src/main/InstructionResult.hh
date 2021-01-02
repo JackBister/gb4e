@@ -48,43 +48,53 @@ private:
 class RegisterWrite
 {
 public:
-    RegisterWrite(Register const * reg, u8 bytePreviousValue, u8 byteValue)
+    RegisterWrite(Register const reg, u8 bytePreviousValue, u8 byteValue)
         : reg(reg), bytePreviousValue(bytePreviousValue), byteValue(byteValue)
+    {
+        assert(reg.Is8Bit());
+    }
+    RegisterWrite(Register const reg, u16 wordPreviousValue, u16 wordValue)
+        : reg(reg), wordPreviousValue(wordPreviousValue), wordValue(wordValue)
+    {
+        assert(reg.Is16Bit());
+    }
+    RegisterWrite(Register const * reg, u8 bytePreviousValue, u8 byteValue)
+        : reg(*reg), bytePreviousValue(bytePreviousValue), byteValue(byteValue)
     {
         assert(reg->Is8Bit());
     }
     RegisterWrite(Register const * reg, u16 wordPreviousValue, u16 wordValue)
-        : reg(reg), wordPreviousValue(wordPreviousValue), wordValue(wordValue)
+        : reg(*reg), wordPreviousValue(wordPreviousValue), wordValue(wordValue)
     {
         assert(reg->Is16Bit());
     }
 
-    Register const * GetRegister() const { return reg; }
+    Register const GetRegister() const { return reg; }
     u8 GetBytePreviousValue() const
     {
-        assert(reg->Is8Bit());
+        assert(reg.Is8Bit());
         return bytePreviousValue;
     }
     u16 GetWordPreviousValue() const
     {
-        assert(reg->Is16Bit());
+        assert(reg.Is16Bit());
         return wordPreviousValue;
     }
     u8 GetByteValue() const
     {
-        assert(reg->Is8Bit());
+        assert(reg.Is8Bit());
         return byteValue;
     }
     u16 GetWordValue() const
     {
-        assert(reg->Is16Bit());
+        assert(reg.Is16Bit());
         return wordValue;
     }
 
     std::string ToString() const;
 
 private:
-    Register const * reg;
+    Register const reg;
     union {
         u8 bytePreviousValue;
         u16 wordPreviousValue;

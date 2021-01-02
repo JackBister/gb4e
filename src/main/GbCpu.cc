@@ -30,6 +30,8 @@ void GbCpu::Reset()
 void GbCpu::LoadRom(RomFile const * romFile)
 {
     this->loadedRom = romFile;
+    this->cartridge->LoadRom(romFile);
+    /*
     auto const cartridgeType = romFile->GetCartridgeType();
 
     if (cartridgeType->IsRomOnly()) {
@@ -42,6 +44,7 @@ void GbCpu::LoadRom(RomFile const * romFile)
         logger->Errorf("Unhandled cartridgeType=%s", ToString(cartridgeType->GetType()).c_str());
         assert(false);
     }
+    */
     // memcpy_s(&this->state->memory[0], MEMORY_SIZE, bootrom, bootromSize);
 }
 
@@ -123,9 +126,9 @@ std::string GbCpu::DumpInstructions(u16 startAddress, u16 endAddress)
 
 GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer)
     : apuState(new GbApuState()), gpuState(new GbGpuState(gbModel, renderer)),
-      state(new GbCpuState(bootromSize, bootrom))
+      state(new GbCpuState(bootromSize, bootrom)), cartridge(new Cartridge())
 {
-    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get());
+    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get());
     // memcpy_s(&this->state->memory[0], MEMORY_SIZE, bootrom, bootromSize);
 }
 

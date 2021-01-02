@@ -42,6 +42,18 @@ u16 GbCpuState::Get16BitRegisterValue(Register const * reg) const
     assert(reg->Is16Bit());
     return registers[reg->GetIndex()];
 }
+
+u8 GbCpuState::Get8BitRegisterValue(Register const reg) const
+{
+    assert(reg.Is8Bit());
+    return ((u8 *)&registers[0])[reg.GetIndex()];
+}
+
+u16 GbCpuState::Get16BitRegisterValue(Register const reg) const
+{
+    assert(reg.Is16Bit());
+    return registers[reg.GetIndex()];
+}
 /*
 u8 GbCpuState::Get8BitMemoryValue(u16 location) const
 {
@@ -60,7 +72,13 @@ std::optional<u8> GbCpuState::ReadMemory(u16 location) const
     if (isBootromActive && location < bootromSize) {
         return bootrom[location];
     }
+    if (location < 0x7FFF) {
+        return {};
+    }
     if (location >= 0x8000 && location <= 0x9FFF) {
+        return {};
+    }
+    if (location >= 0xA000 && location <= 0xBFFF) {
         return {};
     }
     return memory[location];
@@ -82,6 +100,18 @@ void GbCpuState::Set16BitRegisterValue(Register const * reg, u16 value)
 {
     assert(reg->Is16Bit());
     registers[reg->GetIndex()] = value;
+}
+
+void GbCpuState::Set8BitRegisterValue(Register const reg, u8 value)
+{
+    assert(reg.Is8Bit());
+    ((u8 *)&registers[0])[reg.GetIndex()] = value;
+}
+
+void GbCpuState::Set16BitRegisterValue(Register const reg, u16 value)
+{
+    assert(reg.Is16Bit());
+    registers[reg.GetIndex()] = value;
 }
 
 /*

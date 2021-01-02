@@ -6,6 +6,7 @@
 
 namespace gb4e
 {
+class Cartridge;
 class GbApuState;
 class GbCpuState;
 class GbGpuState;
@@ -32,7 +33,10 @@ private:
 class GbMemoryState : public MemoryState
 {
 public:
-    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, GbApuState * apu) : cpu(cpu), gpu(gpu), apu(apu) {}
+    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, GbApuState * apu, Cartridge * cartridge)
+        : cpu(cpu), gpu(gpu), apu(apu), cartridge(cartridge)
+    {
+    }
 
     u8 Read(u16 location) const final override;
     u16 Read16(u16 location) const final override;
@@ -42,5 +46,6 @@ private:
     GbCpuState * cpu;
     GbGpuState * gpu;
     GbApuState * apu;
+    Cartridge * cartridge;
 };
 }

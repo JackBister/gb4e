@@ -37,10 +37,10 @@ std::string RegisterWrite::ToString() const
 {
     std::stringstream ss;
     ss << '{';
-    ss << '\t' << "\"register\": " << reg->ToString() << ',';
-    ss << '\t' << "\"previousValue\": " << std::dec << (int)(reg->Is16Bit() ? wordPreviousValue : bytePreviousValue)
+    ss << '\t' << "\"register\": " << reg.ToString() << ',';
+    ss << '\t' << "\"previousValue\": " << std::dec << (int)(reg.Is16Bit() ? wordPreviousValue : bytePreviousValue)
        << ',';
-    ss << '\t' << "\"value\": " << std::dec << (int)(reg->Is16Bit() ? wordValue : byteValue) << ' ';
+    ss << '\t' << "\"value\": " << std::dec << (int)(reg.Is16Bit() ? wordValue : byteValue) << ' ';
     ss << '}';
     return ss.str();
 }
@@ -88,7 +88,7 @@ void ApplyInstructionResult(GbCpuState * cpu, MemoryState * memoryState, Instruc
 
     auto beforeReg = std::chrono::high_resolution_clock::now();
     for (auto const & regWrite : result.GetRegisterWrites()) {
-        if (regWrite.GetRegister()->Is8Bit()) {
+        if (regWrite.GetRegister().Is8Bit()) {
             cpu->Set8BitRegisterValue(regWrite.GetRegister(), regWrite.GetByteValue());
         } else {
             cpu->Set16BitRegisterValue(regWrite.GetRegister(), regWrite.GetWordValue());

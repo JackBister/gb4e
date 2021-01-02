@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "Cartridge.hh"
 #include "GbCpuState.hh"
 #include "GbGpuState.hh"
 #include "audio/GbApuState.hh"
@@ -38,6 +39,10 @@ u8 GbMemoryState::Read(u16 location) const
     auto cpuValue = cpu->ReadMemory(location);
     if (cpuValue.has_value()) {
         return cpuValue.value();
+    }
+    auto cartridgeValue = cartridge->ReadMemory(location);
+    if (cartridgeValue.has_value()) {
+        return cartridgeValue.value();
     }
     assert(false);
     return 0xCD;

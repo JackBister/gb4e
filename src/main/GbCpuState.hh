@@ -15,7 +15,7 @@ class GbCpu;
 class GbGpuState;
 class Register;
 
-class GbCpuState
+class GbCpuState final
 {
 public:
     friend class GbCpu;
@@ -26,6 +26,10 @@ public:
 
     u8 Get8BitRegisterValue(Register const * reg) const;
     u16 Get16BitRegisterValue(Register const * reg) const;
+
+    u8 Get8BitRegisterValue(Register const reg) const;
+    u16 Get16BitRegisterValue(Register const reg) const;
+
     std::optional<u8> ReadMemory(u16 location) const;
     /*
     u8 Get8BitMemoryValue(u16 location) const;
@@ -35,6 +39,8 @@ public:
 
     void Set8BitRegisterValue(Register const * reg, u8 value);
     void Set16BitRegisterValue(Register const * reg, u16 value);
+    void Set8BitRegisterValue(Register const reg, u8 value);
+    void Set16BitRegisterValue(Register const reg, u16 value);
     // void Set8BitMemoryValue(u16 location, u8 value);
     bool WriteMemory(u16 location, u8 value);
     void SetFlags(u8 flags);

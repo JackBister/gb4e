@@ -11,80 +11,80 @@ InstructionApplier APPLIER_NOP = [](GbCpuState const *, MemoryState const *) { r
 
 Instruction const INSTR_INVALID(0xD3, 0x00, "INVALID", 1, 0, APPLIER_NOP);
 
-Instruction const INSTR_04(0x04, 0x0400, "INC B", 1, 1, Inc(RegisterName::B));
-Instruction const INSTR_05(0x05, 0x0500, "DEC B", 1, 1, Dec(RegisterName::B));
-Instruction const INSTR_06(0x06, 0x0600, "LD B, d8", 2, 2, LdD8(RegisterName::B));
-Instruction const INSTR_0C(0x0C, 0x0C00, "INC C", 1, 1, Inc(RegisterName::C));
-Instruction const INSTR_0D(0x0D, 0x0D00, "DEC C", 1, 1, Dec(RegisterName::C));
-Instruction const INSTR_0E(0x0E, 0x0E00, "LD C, d8", 2, 2, LdD8(RegisterName::C));
+Instruction const INSTR_04(0x04, 0x0400, "INC B", 1, 1, Inc<RegisterName::B>);
+Instruction const INSTR_05(0x05, 0x0500, "DEC B", 1, 1, Dec<RegisterName::B>);
+Instruction const INSTR_06(0x06, 0x0600, "LD B, d8", 2, 2, LdD8<RegisterName::B>);
+Instruction const INSTR_0C(0x0C, 0x0C00, "INC C", 1, 1, Inc<RegisterName::C>);
+Instruction const INSTR_0D(0x0D, 0x0D00, "DEC C", 1, 1, Dec<RegisterName::C>);
+Instruction const INSTR_0E(0x0E, 0x0E00, "LD C, d8", 2, 2, LdD8<RegisterName::C>);
 
-Instruction const INSTR_11(0x11, 0x1100, "LD DE, d16", 3, 3, LdD16(RegisterName::DE));
-Instruction const INSTR_13(0x13, 0x1300, "INC DE", 1, 2, Inc(RegisterName::DE));
-Instruction const INSTR_15(0x15, 0x1500, "DEC D", 1, 1, Dec(RegisterName::D));
-Instruction const INSTR_16(0x16, 0x1600, "LD D, d8", 2, 2, LdD8(RegisterName::D));
-Instruction const INSTR_17(0x17, 0x1700, "RLA", 1, 1, Rla());
-Instruction const INSTR_18(0x18, 0x1800, "JR s8", 2, 3, JrS8());
-Instruction const INSTR_1A(0x1A, 0x1A00, "LD A, (DE)", 1, 2, LdFromAddrReg(RegisterName::A, RegisterName::DE));
-Instruction const INSTR_1D(0x1D, 0x1D00, "DEC E", 1, 1, Dec(RegisterName::E));
-Instruction const INSTR_1E(0x1E, 0x1E00, "LD E, d8", 2, 2, LdD8(RegisterName::E));
+Instruction const INSTR_11(0x11, 0x1100, "LD DE, d16", 3, 3, LdD16<RegisterName::DE>);
+Instruction const INSTR_13(0x13, 0x1300, "INC DE", 1, 2, Inc<RegisterName::DE>);
+Instruction const INSTR_15(0x15, 0x1500, "DEC D", 1, 1, Dec<RegisterName::D>);
+Instruction const INSTR_16(0x16, 0x1600, "LD D, d8", 2, 2, LdD8<RegisterName::D>);
+Instruction const INSTR_17(0x17, 0x1700, "RLA", 1, 1, Rla);
+Instruction const INSTR_18(0x18, 0x1800, "JR s8", 2, 3, JrS8);
+Instruction const INSTR_1A(0x1A, 0x1A00, "LD A, (DE)", 1, 2, LdFromAddrReg<RegisterName::A, RegisterName::DE>);
+Instruction const INSTR_1D(0x1D, 0x1D00, "DEC E", 1, 1, Dec<RegisterName::E>);
+Instruction const INSTR_1E(0x1E, 0x1E00, "LD E, d8", 2, 2, LdD8<RegisterName::E>);
 
-Instruction const INSTR_20(0x20, 0x2000, "JR NZ, s8", 2, 2, JrNFlagS8(0b10000000)); // TODO: Conditional 3 cycles
-Instruction const INSTR_21(0x21, 0x2100, "LD HL, d16", 3, 3, LdD16(RegisterName::HL));
-Instruction const INSTR_22(0x22, 0x2200, "LD (HL+), A", 1, 2, LdHlIncDecA(1));
-Instruction const INSTR_23(0x23, 0x2300, "INC HL", 1, 2, Inc(RegisterName::HL));
-Instruction const INSTR_24(0x24, 0x2400, "INC H", 1, 1, Inc(RegisterName::H));
-Instruction const INSTR_28(0x28, 0x2800, "JR Z, s8", 2, 2, JrFlagS8(0b10000000)); // TODO: Conditional 3 cycles
-Instruction const INSTR_2E(0x2E, 0x2E00, "LD L, d8", 2, 2, LdD8(RegisterName::L));
+Instruction const INSTR_20(0x20, 0x2000, "JR NZ, s8", 2, 2, JrNFlagS8<0b10000000>); // TODO: Conditional 3 cycles
+Instruction const INSTR_21(0x21, 0x2100, "LD HL, d16", 3, 3, LdD16<RegisterName::HL>);
+Instruction const INSTR_22(0x22, 0x2200, "LD (HL+), A", 1, 2, LdHlIncDecA<1>);
+Instruction const INSTR_23(0x23, 0x2300, "INC HL", 1, 2, Inc<RegisterName::HL>);
+Instruction const INSTR_24(0x24, 0x2400, "INC H", 1, 1, Inc<RegisterName::H>);
+Instruction const INSTR_28(0x28, 0x2800, "JR Z, s8", 2, 2, JrFlagS8<0b10000000>); // TODO: Conditional 3 cycles
+Instruction const INSTR_2E(0x2E, 0x2E00, "LD L, d8", 2, 2, LdD8<RegisterName::L>);
 
-Instruction const INSTR_30(0x30, 0x3000, "JR NC, s8", 2, 2, JrNFlagS8(0b00010000)); // TODO: Conditional 3 cycles
-Instruction const INSTR_31(0x31, 0x3100, "LD SP, d16", 3, 3, LdD16(RegisterName::SP));
-Instruction const INSTR_32(0x32, 0x3200, "LD (HL-), A", 1, 2, LdHlIncDecA(-1));
-Instruction const INSTR_3D(0x3D, 0x3D00, "DEC A", 1, 1, Dec(RegisterName::A));
-Instruction const INSTR_3E(0x3E, 0x3E00, "LD A, d8", 2, 2, LdD8(RegisterName::A));
+Instruction const INSTR_30(0x30, 0x3000, "JR NC, s8", 2, 2, JrNFlagS8<0b00010000>); // TODO: Conditional 3 cycles
+Instruction const INSTR_31(0x31, 0x3100, "LD SP, d16", 3, 3, LdD16<RegisterName::SP>);
+Instruction const INSTR_32(0x32, 0x3200, "LD (HL-), A", 1, 2, LdHlIncDecA<-1>);
+Instruction const INSTR_3D(0x3D, 0x3D00, "DEC A", 1, 1, Dec<RegisterName::A>);
+Instruction const INSTR_3E(0x3E, 0x3E00, "LD A, d8", 2, 2, LdD8<RegisterName::A>);
 
-Instruction const INSTR_40(0x40, 0x4000, "LD B, B", 1, 1, Ld(RegisterName::B, RegisterName::B));
-Instruction const INSTR_4F(0x4F, 0x4F00, "LD C, A", 1, 1, Ld(RegisterName::C, RegisterName::A));
+Instruction const INSTR_40(0x40, 0x4000, "LD B, B", 1, 1, Ld<RegisterName::B, RegisterName::B>);
+Instruction const INSTR_4F(0x4F, 0x4F00, "LD C, A", 1, 1, Ld<RegisterName::C, RegisterName::A>);
 
-Instruction const INSTR_50(0x50, 0x5000, "LD D, B", 1, 1, Ld(RegisterName::D, RegisterName::B));
-Instruction const INSTR_57(0x57, 0x5700, "LD D, A", 1, 1, Ld(RegisterName::D, RegisterName::A));
+Instruction const INSTR_50(0x50, 0x5000, "LD D, B", 1, 1, Ld<RegisterName::D, RegisterName::B>);
+Instruction const INSTR_57(0x57, 0x5700, "LD D, A", 1, 1, Ld<RegisterName::D, RegisterName::A>);
 
-Instruction const INSTR_60(0x60, 0x6000, "LD H, B", 1, 1, Ld(RegisterName::H, RegisterName::B));
-Instruction const INSTR_67(0x67, 0x6700, "LD H, A", 1, 1, Ld(RegisterName::H, RegisterName::A));
+Instruction const INSTR_60(0x60, 0x6000, "LD H, B", 1, 1, Ld<RegisterName::H, RegisterName::B>);
+Instruction const INSTR_67(0x67, 0x6700, "LD H, A", 1, 1, Ld<RegisterName::H, RegisterName::A>);
 
-Instruction const INSTR_70(0x70, 0x7000, "LD (HL), B", 1, 2, LdMemViaReg(RegisterName::HL, RegisterName::B));
-Instruction const INSTR_77(0x77, 0x7700, "LD (HL), A", 1, 2, LdMemViaReg(RegisterName::HL, RegisterName::A));
-Instruction const INSTR_78(0x78, 0x7800, "LD A, B", 1, 1, Ld(RegisterName::A, RegisterName::B));
-Instruction const INSTR_7B(0x7B, 0x7B00, "LD A, E", 1, 1, Ld(RegisterName::A, RegisterName::E));
-Instruction const INSTR_7C(0x7C, 0x7C00, "LD A, H", 1, 1, Ld(RegisterName::A, RegisterName::H));
-Instruction const INSTR_7D(0x7D, 0x7D00, "LD A, L", 1, 1, Ld(RegisterName::A, RegisterName::L));
+Instruction const INSTR_70(0x70, 0x7000, "LD (HL), B", 1, 2, LdMemViaReg<RegisterName::HL, RegisterName::B>);
+Instruction const INSTR_77(0x77, 0x7700, "LD (HL), A", 1, 2, LdMemViaReg<RegisterName::HL, RegisterName::A>);
+Instruction const INSTR_78(0x78, 0x7800, "LD A, B", 1, 1, Ld<RegisterName::A, RegisterName::B>);
+Instruction const INSTR_7B(0x7B, 0x7B00, "LD A, E", 1, 1, Ld<RegisterName::A, RegisterName::E>);
+Instruction const INSTR_7C(0x7C, 0x7C00, "LD A, H", 1, 1, Ld<RegisterName::A, RegisterName::H>);
+Instruction const INSTR_7D(0x7D, 0x7D00, "LD A, L", 1, 1, Ld<RegisterName::A, RegisterName::L>);
 
-Instruction const INSTR_80(0x80, 0x8000, "ADD A, B", 1, 1, Add(RegisterName::A, RegisterName::B));
-Instruction const INSTR_86(0x86, 0x8600, "ADD A, (HL)", 1, 2, AddFromAddrReg(RegisterName::A, RegisterName::HL));
+Instruction const INSTR_80(0x80, 0x8000, "ADD A, B", 1, 1, Add<RegisterName::A, RegisterName::B>);
+Instruction const INSTR_86(0x86, 0x8600, "ADD A, (HL)", 1, 2, AddFromAddrReg<RegisterName::A, RegisterName::HL>);
 
-Instruction const INSTR_90(0x90, 0x9000, "SUB B", 1, 1, Sub(RegisterName::B));
+Instruction const INSTR_90(0x90, 0x9000, "SUB B", 1, 1, Sub<RegisterName::B>);
 
-Instruction const INSTR_A0(0xA0, 0xA000, "AND B", 1, 1, And(RegisterName::B));
-Instruction const INSTR_AF(0xAF, 0xAF00, "XOR A", 1, 1, Xor(RegisterName::A));
+Instruction const INSTR_A0(0xA0, 0xA000, "AND B", 1, 1, And<RegisterName::B>);
+Instruction const INSTR_AF(0xAF, 0xAF00, "XOR A", 1, 1, Xor<RegisterName::A>);
 
-Instruction const INSTR_B0(0xB0, 0xB000, "OR B", 1, 1, Or(RegisterName::B));
-Instruction const INSTR_BE(0xBE, 0xBE00, "CP (HL)", 1, 2, CpFromMem(RegisterName::HL));
+Instruction const INSTR_B0(0xB0, 0xB000, "OR B", 1, 1, Or<RegisterName::B>);
+Instruction const INSTR_BE(0xBE, 0xBE00, "CP (HL)", 1, 2, CpFromMem<RegisterName::HL>);
 
-Instruction const INSTR_C0(0xC0, 0xC000, "RET NZ", 1, 2, RetNFlag(0b10000000)); // TODO: Conditional 5 cycles
-Instruction const INSTR_C1(0xC1, 0xC100, "POP BC", 1, 3, Pop(RegisterName::BC));
-Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push(RegisterName::BC));
-Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret());
-Instruction const INSTR_CD(0xCD, 0xCD00, "CALL a16", 3, 6, CallA16());
+Instruction const INSTR_C0(0xC0, 0xC000, "RET NZ", 1, 2, RetNFlag<0b10000000>); // TODO: Conditional 5 cycles
+Instruction const INSTR_C1(0xC1, 0xC100, "POP BC", 1, 3, Pop<RegisterName::BC>);
+Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push<RegisterName::BC>);
+Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret);
+Instruction const INSTR_CD(0xCD, 0xCD00, "CALL a16", 3, 6, CallA16);
 
-Instruction const INSTR_E0(0xE0, 0xE000, "LD (a8), A", 2, 3, LdA8());
-Instruction const INSTR_E2(0xE2, 0xE200, "LD (C), A", 1, 2, LdMemViaReg(RegisterName::C, RegisterName::A));
-Instruction const INSTR_EA(0xEA, 0xEA00, "LD (a16), A", 3, 4, LdA16(RegisterName::A));
+Instruction const INSTR_E0(0xE0, 0xE000, "LD (a8), A", 2, 3, LdA8);
+Instruction const INSTR_E2(0xE2, 0xE200, "LD (C), A", 1, 2, LdMemViaReg<RegisterName::C, RegisterName::A>);
+Instruction const INSTR_EA(0xEA, 0xEA00, "LD (a16), A", 3, 4, LdA16<RegisterName::A>);
 
-Instruction const INSTR_F0(0xF0, 0xF000, "LD A, (a8)", 2, 3, LdFromA8(RegisterName::A));
-Instruction const INSTR_FA(0xFA, 0xFA00, "LD A, (a16)", 3, 4, LdFromA16(RegisterName::A));
-Instruction const INSTR_FE(0xFE, 0xFE00, "CP d8", 2, 2, CpD8());
+Instruction const INSTR_F0(0xF0, 0xF000, "LD A, (a8)", 2, 3, LdFromA8<RegisterName::A>);
+Instruction const INSTR_FA(0xFA, 0xFA00, "LD A, (a16)", 3, 4, LdFromA16<RegisterName::A>);
+Instruction const INSTR_FE(0xFE, 0xFE00, "CP d8", 2, 2, CpD8);
 
-Instruction const INSTR_CB11(0xCB, 0xCB11, "RL C", 2, 2, Rl(RegisterName::C));
-Instruction const INSTR_CB7C(0xCB, 0xCB7C, "BIT 7, H", 2, 2, Bit(7, RegisterName::H));
+Instruction const INSTR_CB11(0xCB, 0xCB11, "RL C", 2, 2, Rl<RegisterName::C>);
+Instruction const INSTR_CB7C(0xCB, 0xCB7C, "BIT 7, H", 2, 2, Bit<7, RegisterName::H>);
 
 // clang-format off
 std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
