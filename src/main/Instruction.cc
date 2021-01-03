@@ -198,7 +198,9 @@ Instruction const INSTR_BE(0xBE, 0xBE00, "CP (HL)", 1, 2, CpFromMem<RegisterName
 
 Instruction const INSTR_C0(0xC0, 0xC000, "RET NZ", 1, 2, RetNFlag<0b10000000>); // TODO: Conditional 5 cycles
 Instruction const INSTR_C1(0xC1, 0xC100, "POP BC", 1, 3, Pop<RegisterName::BC>);
-// C2-C4
+// C2
+Instruction const INSTR_C3(0xC3, 0xC300, "JP a16", 3, 4, JpA16);
+// C4
 Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push<RegisterName::BC>);
 // C6-C8
 Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret);
@@ -520,7 +522,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_C0, //C0
     &INSTR_C1,
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_C3,
     &INSTR_INVALID,
     &INSTR_C5, //C5
     &INSTR_INVALID,

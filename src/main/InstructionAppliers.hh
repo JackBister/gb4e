@@ -189,6 +189,8 @@ InstructionResult Inc(GbCpuState const * state, MemoryState const * memory)
     }
 }
 
+InstructionResult JpA16(GbCpuState const * state, MemoryState const * memory);
+
 template <u8 FLAGMASK>
 InstructionResult JrFlagS8(GbCpuState const * state, MemoryState const * memory)
 {

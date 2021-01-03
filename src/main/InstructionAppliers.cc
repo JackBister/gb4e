@@ -50,6 +50,18 @@ InstructionResult CpD8(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, flags), 2, 2);
 }
 
+InstructionResult JpA16(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr pc(RegisterName::PC);
+
+    u16 pcValue = state->Get16BitRegisterValue(pc);
+    assert(pcValue < 0xFFFE);
+
+    u16 newPc = memory->Read16(pcValue + 1);
+
+    return InstructionResult(RegisterWrite(pc, pcValue, newPc), 0, 4);
+}
+
 InstructionResult JrS8(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr pc(RegisterName::PC);

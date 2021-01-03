@@ -1484,6 +1484,26 @@ TEST Instr_Bit_7_H_FromBootrom_Break()
     PASS();
 }
 
+TEST Instr_JpA16()
+{
+    using namespace gb4e;
+    auto applier = JpA16;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x101);
+    memory.Write(0x101, 0xC3);
+    memory.Write(0x102, 0x50);
+    memory.Write(0x103, 0x01);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0x150, regWrite.GetWordValue());
+    PASS();
+}
+
 SUITE(Instruction_test)
 {
     RUN_TEST(Instr_Ld_B_A);
@@ -1544,4 +1564,5 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_Bit_7_H_FromBootrom);
     RUN_TEST(Instr_JrNzS8_FromBootrom);
     RUN_TEST(Instr_Bit_7_H_FromBootrom_Break);
+    RUN_TEST(Instr_JpA16);
 }
