@@ -1987,7 +1987,7 @@ TEST Instr_JpHl()
     auto regWrite = result.GetRegisterWrites()[0];
     ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
     ASSERT_EQ(0x100, regWrite.GetWordValue());
-    ASSERT_EQ(1, result.GetConsumedBytes());
+    ASSERT_EQ(0, result.GetConsumedBytes());
     ASSERT_EQ(1, result.GetConsumedCycles());
 
     PASS();
@@ -2017,7 +2017,6 @@ TEST Instr_Res_B()
 
 TEST Instr_Res_HL()
 {
-
     using namespace gb4e;
     auto applier = Res<2, RegisterName::HL>;
     GbCpuState state;
@@ -2036,6 +2035,29 @@ TEST Instr_Res_HL()
     ASSERT(result.GetRegisterWrites().empty());
     ASSERT_EQ(2, result.GetConsumedBytes());
     ASSERT_EQ(4, result.GetConsumedCycles());
+    PASS();
+}
+
+TEST Instr_IncHlAddr()
+{
+    using namespace gb4e;
+    auto applier = IncHlAddr;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set16BitRegisterValue(Register(RegisterName::HL), 0x100);
+    memory.Write(0x100, 1);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    ASSERT_FALSE(result.GetInterruptSet().has_value());
+    ASSERT_EQ(1, result.GetMemoryWrites().size());
+    auto memWrite = result.GetMemoryWrites()[0];
+    ASSERT_EQ(0x100, memWrite.GetLocation());
+    ASSERT_EQ(2, memWrite.GetValue());
+    ASSERT(result.GetRegisterWrites().empty());
+    ASSERT_EQ(1, result.GetConsumedBytes());
+    ASSERT_EQ(3, result.GetConsumedCycles());
     PASS();
 }
 
@@ -2122,4 +2144,5 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_JpHl);
     RUN_TEST(Instr_Res_B);
     RUN_TEST(Instr_Res_HL);
+    RUN_TEST(Instr_IncHlAddr);
 }
