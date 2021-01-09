@@ -25,6 +25,8 @@ public:
      * bootrom must be 256 bytes long and must be valid for as long as the CPU is running
      */
     static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer);
+    GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> && state,
+          std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge);
 
     void Reset();
 
@@ -34,7 +36,9 @@ public:
      */
     void LoadRom(RomFile const * romFile);
 
+    void StepInstruction();
     int Tick(u64 deltaTimeNs);
+    void TickCycle();
 
     std::string DumpInstructions(u16 startAddress, u16 endAddress);
 
@@ -48,13 +52,11 @@ public:
 private:
     GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer);
 
-    std::unique_ptr<GbApuState> apuState;
+    std::unique_ptr<ApuState> apuState;
     std::unique_ptr<GbCpuState> state;
     std::unique_ptr<GbGpuState> gpuState;
     std::unique_ptr<Cartridge> cartridge;
     std::unique_ptr<MemoryState> memoryState;
-
-    RomFile const * loadedRom;
 
     u64 clockTimeNs = 0;
     u64 lastCycleNs = 0;
@@ -64,6 +66,12 @@ private:
     // InstructionResult will be queued. Every clock cycle waitCycles is reduced by 1. When it hits zero, the queued
     // InstructionResult will be executed.
     u8 waitCycles = 1;
+
+    // If this is != 0xFF, an interrupt is currently being executed. When an interrupt is raised this is set to 0 and
+    // incremented by 1 per cycle. An interrupt takes 5 cycles. The first 3 cycles do nothing. On cycle 4 IME is set to
+    // false and the current PC is pushed. On cycle 5 the PC is set to the interrupt handler.
+    u8 interruptRoutineCycle = 0xFF;
+    u16 queuedInterruptAddress = 0;
 
     std::optional<InstructionResult> queuedInstructionResult;
 

@@ -22,7 +22,7 @@ void Cartridge::LoadRom(RomFile const * romFile)
 bool Cartridge::WriteMemory(u16 addr, u8 val)
 {
     if (addr >= 0xA000 && addr <= 0xBFFF) {
-        activeRamBank[addr] = val;
+        activeRamBank[addr - 0xA000] = val;
         return true;
     }
     return false;
@@ -34,10 +34,10 @@ std::optional<u8> Cartridge::ReadMemory(u16 addr) const
         return romBanks[0][addr];
     }
     if (addr <= 0x7FFF) {
-        return activeRomBank1[addr];
+        return activeRomBank1[addr - 0x4000];
     }
     if (addr >= 0xA000 && addr <= 0xBFFF) {
-        return activeRamBank[addr];
+        return activeRamBank[addr - 0xA000];
     }
 
     return {};

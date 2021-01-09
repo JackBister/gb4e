@@ -44,10 +44,8 @@ void DrawDebugger(GbCpu * cpu)
             }
         }
 
-        ImGui::InputInt("elapsed time NS", &deltaTimeNs);
-        ImGui::SameLine();
-        if (ImGui::Button("Tick")) {
-            cpu->Tick(deltaTimeNs);
+        if (ImGui::Button("Step fwd")) {
+            cpu->StepInstruction();
         }
 
         ImGui::InputText("Breakpoint", breakpointBuf, BREAKPOINT_BUF_SIZE);

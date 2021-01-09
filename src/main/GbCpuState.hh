@@ -36,18 +36,40 @@ public:
     u16 Get16BitMemoryValue(u16 location) const;
     */
     u8 GetFlags() const;
+    u8 GetInterruptEnable() const { return interruptEnable; }
+    bool GetInterruptFlags() const { return interruptFlags; }
+    bool GetInterruptMasterEnable() const { return ime; }
+    bool HasPendingImeEnable() const { return hasPendingImeEnable; }
 
     void Set8BitRegisterValue(Register const * reg, u8 value);
     void Set16BitRegisterValue(Register const * reg, u16 value);
     void Set8BitRegisterValue(Register const reg, u8 value);
     void Set16BitRegisterValue(Register const reg, u16 value);
-    // void Set8BitMemoryValue(u16 location, u8 value);
+
     bool WriteMemory(u16 location, u8 value);
     void SetFlags(u8 flags);
+    void SetInterruptMasterEnable(bool enabled) { this->ime = enabled; }
+    void EnableInterruptsWithDelay() { this->hasPendingImeEnable = true; }
 
 private:
     std::array<u16, 6> registers;
     std::array<u8, MEMORY_SIZE> memory{0};
+
+    // Set by EI
+    bool hasPendingImeEnable = false;
+    // Set by DI, RETI, INT
+    bool ime = false;
+
+    // FF00
+    u8 joypSelect = 0;
+    u8 buttons = 0x0F;
+    u8 dpad = 0x0F;
+
+    // FF0F
+    u8 interruptFlags = 0;
+
+    // FFFF
+    u8 interruptEnable = 0;
 
     std::unordered_map<u16, MemoryWriteHandler> memoryWriteHandlers;
 

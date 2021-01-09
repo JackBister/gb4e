@@ -44,6 +44,12 @@ struct Background {
     u16 data;
 };
 
+struct GpuTickResult {
+    // Bit 0: V-blank
+    // Bit 1: LCD STAT
+    u8 interrupts;
+};
+
 struct Pixel {
     u8 color;
     u8 colorIndex;
@@ -59,7 +65,7 @@ public:
 
     std::optional<u8> ReadMemory(u16 location) const;
 
-    void TickCycle();
+    GpuTickResult TickCycle();
     bool WriteMemory(u16 location, u8 value);
 
     // These are only public for test purposes
@@ -67,10 +73,10 @@ public:
     u16 GetColorIndex(u16 tileRow, u8 xInTile);
 
 private:
-    void CycleOamRead();
-    void CycleVramRead();
-    void CycleHblank();
-    void CycleVblank();
+    GpuTickResult CycleOamRead();
+    GpuTickResult CycleVramRead();
+    GpuTickResult CycleHblank();
+    GpuTickResult CycleVblank();
 
     void DrawScanlinePixel(u8 x);
     Pixel DrawScanlineBackground(u8 x);

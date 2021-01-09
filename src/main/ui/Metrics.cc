@@ -10,6 +10,7 @@ u64 cycleTimeNs = 0;
 u64 instructionTimeNs = 0;
 u64 applyTimeNs = 0;
 u64 applyFlagsTimeNs = 0;
+u64 applyInterruptsTimeNs = 0;
 u64 applyMemoryTimeNs = 0;
 u64 applyRegistersTimeNs = 0;
 u64 applyPcTimeNs = 0;
@@ -29,6 +30,7 @@ void DrawMetrics()
         ImGui::Text("gpuCycleTimeNs: %zu", gpuCycleTimeNs);
         ImGui::Text("cyclesPerFrame %d", cyclesPerFrame);
         ImGui::Text("applyFlagsTimeNs: %zu", applyFlagsTimeNs);
+        ImGui::Text("applyInterruptsTimeNs: %zu", applyInterruptsTimeNs);
         ImGui::Text("applyMemoryTimeNs: %zu", applyMemoryTimeNs);
         ImGui::Text("applyRegistersTimeNs: %zu", applyRegistersTimeNs);
         ImGui::Text("applyPcTimeNs: %zu", applyPcTimeNs);

@@ -7,7 +7,7 @@
 namespace gb4e
 {
 class Cartridge;
-class GbApuState;
+class ApuState;
 class GbCpuState;
 class GbGpuState;
 
@@ -33,7 +33,7 @@ private:
 class GbMemoryState : public MemoryState
 {
 public:
-    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, GbApuState * apu, Cartridge * cartridge)
+    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, ApuState * apu, Cartridge * cartridge)
         : cpu(cpu), gpu(gpu), apu(apu), cartridge(cartridge)
     {
     }
@@ -45,7 +45,7 @@ public:
 private:
     GbCpuState * cpu;
     GbGpuState * gpu;
-    GbApuState * apu;
+    ApuState * apu;
     Cartridge * cartridge;
 };
 }

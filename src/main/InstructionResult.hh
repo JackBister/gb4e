@@ -26,6 +26,29 @@ private:
     u8 value;
 };
 
+class InterruptSet
+{
+public:
+    InterruptSet(bool previousValue, bool value)
+        : previousValue(previousValue), value(value), withInstructionDelay(false)
+    {
+    }
+    InterruptSet(bool previousValue, bool value, bool withInstructionDelay)
+        : previousValue(previousValue), value(value), withInstructionDelay(withInstructionDelay)
+    {
+    }
+
+    bool GetPreviousValue() const { return previousValue; }
+    bool GetValue() const { return value; }
+    bool GetWithInstructionDelay() const { return withInstructionDelay; }
+    std::string ToString() const;
+
+private:
+    bool previousValue;
+    bool value;
+    bool withInstructionDelay; // If true, the the set will occur after the next instruction is executed.
+};
+
 class MemoryWrite
 {
 public:
@@ -117,6 +140,12 @@ public:
         : flagSet(flagSet), consumedBytes(consumedBytes), consumedCycles(consumedCycles)
     {
     }
+    InstructionResult(FlagSet flagSet, MemoryWrite memoryWrite, u8 consumedBytes, u8 consumedCycles)
+        : flagSet(flagSet), memoryWrites({memoryWrite}), consumedBytes(consumedBytes), consumedCycles(consumedCycles)
+    {
+        assert(consumedBytes <= 3);
+        assert(consumedCycles <= 6);
+    }
     InstructionResult(FlagSet flagSet, RegisterWrite registerWrite, u8 consumedBytes, u8 consumedCycles)
         : flagSet(flagSet), registerWrites({registerWrite}), consumedBytes(consumedBytes),
           consumedCycles(consumedCycles)
@@ -171,8 +200,19 @@ public:
         assert(consumedBytes <= 3);
         assert(consumedCycles <= 6);
     }
+    InstructionResult(std::optional<InterruptSet> interruptSet, u8 consumedBytes, u8 consumedCycles)
+        : interruptSet(interruptSet), consumedBytes(consumedBytes), consumedCycles(consumedCycles)
+    {
+    }
+    InstructionResult(std::optional<InterruptSet> interruptSet, std::vector<RegisterWrite> registerWrites,
+                      u8 consumedBytes, u8 consumedCycles)
+        : interruptSet(interruptSet), registerWrites(registerWrites), consumedBytes(consumedBytes),
+          consumedCycles(consumedCycles)
+    {
+    }
 
     std::optional<FlagSet> GetFlagSet() const { return flagSet; }
+    std::optional<InterruptSet> GetInterruptSet() const { return interruptSet; }
     std::vector<MemoryWrite> const & GetMemoryWrites() const { return memoryWrites; }
     std::vector<RegisterWrite> const & GetRegisterWrites() const { return registerWrites; }
     u8 GetConsumedBytes() const { return consumedBytes; }
@@ -182,6 +222,7 @@ public:
 
 private:
     std::optional<FlagSet> flagSet;
+    std::optional<InterruptSet> interruptSet;
     std::vector<MemoryWrite> memoryWrites;
     std::vector<RegisterWrite> registerWrites;
     u8 consumedBytes;

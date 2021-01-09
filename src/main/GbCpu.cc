@@ -29,23 +29,18 @@ void GbCpu::Reset()
 
 void GbCpu::LoadRom(RomFile const * romFile)
 {
-    this->loadedRom = romFile;
     this->cartridge->LoadRom(romFile);
-    /*
-    auto const cartridgeType = romFile->GetCartridgeType();
+}
 
-    if (cartridgeType->IsRomOnly()) {
-        assert(romFile->GetSize() == 32 * 1024);
-        memcpy_s(&this->state->memory[0], MEMORY_SIZE, romFile->GetData(), romFile->GetSize());
-    } else if (cartridgeType->IsMbc3()) {
-        assert(romFile->GetSize() > 16 * 1024);
-        memcpy_s(&this->state->memory[0], MEMORY_SIZE, romFile->GetData(), 16 * 1024);
-    } else {
-        logger->Errorf("Unhandled cartridgeType=%s", ToString(cartridgeType->GetType()).c_str());
-        assert(false);
+void GbCpu::StepInstruction()
+{
+    while (!queuedInstructionResult.has_value()) {
+        TickCycle();
     }
-    */
-    // memcpy_s(&this->state->memory[0], MEMORY_SIZE, bootrom, bootromSize);
+    int numCyclesToTick = waitCycles;
+    for (int i = 0; i < numCyclesToTick; ++i) {
+        TickCycle();
+    }
 }
 
 int GbCpu::Tick(u64 deltaTimeNs)
@@ -71,37 +66,85 @@ int GbCpu::Tick(u64 deltaTimeNs)
         }
         lastCycleNs = clockTimeNs;
         numCycles++;
-        waitCycles--;
-        auto beforeGpu = std::chrono::high_resolution_clock::now();
-        apuState->TickCycle();
-        gpuState->TickCycle();
-        gb4e::ui::gpuCycleTimeNs = (std::chrono::high_resolution_clock::now() - beforeGpu).count();
-        if (waitCycles > 0) {
-            logger->Tracef("TickCycle waitCycles=%d, early out", waitCycles);
-            continue;
-        }
-        if (queuedInstructionResult.has_value()) {
-            logger->Tracef("TickCycle applying instructionResult."); // TODO: InstructionResult::ToString
-            auto beforeApply = std::chrono::high_resolution_clock::now();
-            ApplyInstructionResult(state.get(), memoryState.get(), queuedInstructionResult.value());
-            gb4e::ui::applyTimeNs = (std::chrono::high_resolution_clock::now() - beforeApply).count();
-            queuedInstructionResult = {};
-        }
+        TickCycle();
         u16 pc = state->Get16BitRegisterValue(GetRegister(RegisterName::PC));
-        u16 opcode = memoryState->Read16(pc);
-        auto instruction = DecodeInstruction(opcode);
-        logger->Tracef(
-            "TickCycle pc=%04x, applying opcode=%04x, instruction=%s", pc, opcode, instruction->GetLabel().c_str());
-        auto beforeApplier = std::chrono::high_resolution_clock::now();
-        queuedInstructionResult = instruction->GetApplier()(state.get(), memoryState.get());
-        gb4e::ui::instructionTimeNs = (std::chrono::high_resolution_clock::now() - beforeApplier).count();
-        waitCycles = queuedInstructionResult.value().GetConsumedCycles();
-        logger->Tracef("TickCycle queued, waitCycles=%u", waitCycles);
-        if (breakpoints.find(pc) != breakpoints.end() && numCycles > 1) {
+        if (breakpoints.find(pc) != breakpoints.end()) {
             return numCycles;
         }
     }
     return numCycles;
+}
+
+void GbCpu::TickCycle()
+{
+    auto beforeGpu = std::chrono::high_resolution_clock::now();
+    apuState->TickCycle();
+    GpuTickResult gpuTickResult = gpuState->TickCycle();
+    {
+        u8 iflags = state->ReadMemory(0xFF0F).value();
+        iflags |= gpuTickResult.interrupts;
+        state->WriteMemory(0xFF0F, iflags);
+    }
+    gb4e::ui::gpuCycleTimeNs = (std::chrono::high_resolution_clock::now() - beforeGpu).count();
+    waitCycles--;
+    if (interruptRoutineCycle != 0xFF) {
+        if (interruptRoutineCycle == 3) {
+            Register constexpr spReg(RegisterName::SP);
+            u16 pc = state->Get16BitRegisterValue(GetRegister(RegisterName::PC));
+            u16 sp = state->Get16BitRegisterValue(spReg);
+            memoryState->Write(sp - 1, pc >> 8);
+            memoryState->Write(sp - 2, pc & 0x00FF);
+            state->Set16BitRegisterValue(spReg, sp - 2);
+            interruptRoutineCycle++;
+        } else if (interruptRoutineCycle == 4) {
+            u8 iflags = state->ReadMemory(0xFF0F).value();
+            Register constexpr pcReg(RegisterName::PC);
+            u8 interruptMask = iflags & state->GetInterruptEnable();
+            u8 interruptId = (FindFirstSet(interruptMask) - 1);
+            u16 interruptHandlerAddress = 0x40 + interruptId * 8;
+            state->Set16BitRegisterValue(pcReg, interruptHandlerAddress);
+            state->SetInterruptMasterEnable(false);
+            memoryState->Write(0xFF0F, iflags ^ (1 << interruptId));
+            logger->Infof(
+                "iflags %02x %02x %d %02x", iflags, 1 << interruptId, interruptId, iflags ^ (1 << interruptId));
+            interruptRoutineCycle = 0xFF;
+            waitCycles = 0;
+        } else {
+            interruptRoutineCycle++;
+        }
+        return;
+    }
+    if (waitCycles > 0 && !gpuTickResult.interrupts) {
+        logger->Tracef("TickCycle waitCycles=%d, early out", waitCycles);
+        return;
+    }
+    if (queuedInstructionResult.has_value()) {
+        logger->Tracef("TickCycle applying instructionResult."); // TODO: InstructionResult::ToString
+        auto beforeApply = std::chrono::high_resolution_clock::now();
+        ApplyInstructionResult(state.get(), memoryState.get(), queuedInstructionResult.value());
+        gb4e::ui::applyTimeNs = (std::chrono::high_resolution_clock::now() - beforeApply).count();
+        queuedInstructionResult = {};
+    }
+    u8 iflags = state->ReadMemory(0xFF0F).value();
+    u8 interruptMask = iflags & state->GetInterruptEnable();
+    if (interruptMask && state->GetInterruptMasterEnable()) {
+        interruptRoutineCycle = 0;
+        return;
+    }
+    u16 pc = state->Get16BitRegisterValue(GetRegister(RegisterName::PC));
+
+    u16 opcode = memoryState->Read16(pc);
+    auto instruction = DecodeInstruction(opcode);
+    if (instruction->GetInstructionWord() == 0) {
+        logger->Infof("opcode decode failed, pc=%04x, opcode=%04x", pc, opcode);
+    }
+    logger->Tracef(
+        "TickCycle pc=%04x, applying opcode=%04x, instruction=%s", pc, opcode, instruction->GetLabel().c_str());
+    auto beforeApplier = std::chrono::high_resolution_clock::now();
+    queuedInstructionResult = instruction->GetApplier()(state.get(), memoryState.get());
+    gb4e::ui::instructionTimeNs = (std::chrono::high_resolution_clock::now() - beforeApplier).count();
+    waitCycles = queuedInstructionResult.value().GetConsumedCycles();
+    logger->Tracef("TickCycle queued, waitCycles=%u", waitCycles);
 }
 
 std::string GbCpu::DumpInstructions(u16 startAddress, u16 endAddress)
@@ -122,6 +165,13 @@ std::string GbCpu::DumpInstructions(u16 startAddress, u16 endAddress)
         i += instruction->GetInstructionSize();
     }
     return ss.str();
+}
+GbCpu::GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> && state,
+             std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge)
+    : apuState(std::move(apuState)), state(std::move(state)), gpuState(std::move(gpuState)),
+      cartridge(std::move(cartridge)), memoryState(std::move(memoryState))
+{
+    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get());
 }
 
 GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer)

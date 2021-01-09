@@ -51,4 +51,18 @@ u8 constexpr FLAG_N = BIT(6);    // 1 if instruction was a subtraction
 u8 constexpr FLAG_HC = BIT(5);   // 1 if instruction caused a half carry
 u8 constexpr FLAG_C = BIT(4);    // 1 if instruction caused a carry
 
+template <typename T>
+u8 FindFirstSet(T val)
+{
+    if (val == 0) {
+        return 0;
+    }
+    u8 ret = 1;
+    while ((val & 1) == 0) {
+        val >>= 1;
+        ret++;
+    }
+    return ret;
+}
+
 }

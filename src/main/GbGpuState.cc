@@ -33,22 +33,20 @@ void GbGpuState::Reset()
     bgpIndex = 0;
 }
 
-void GbGpuState::TickCycle()
+GpuTickResult GbGpuState::TickCycle()
 {
     switch (mode) {
     case GbGpuMode::OAM_READ:
-        CycleOamRead();
-        return;
+        return CycleOamRead();
     case GbGpuMode::VRAM_READ:
-        CycleVramRead();
-        return;
+        return CycleVramRead();
     case GbGpuMode::HBLANK:
-        CycleHblank();
-        return;
+        return CycleHblank();
     case GbGpuMode::VBLANK:
-        CycleVblank();
-        return;
+        return CycleVblank();
     }
+    assert(false);
+    return {0};
 }
 
 std::optional<u8> GbGpuState::ReadMemory(u16 location) const
@@ -134,7 +132,7 @@ bool GbGpuState::WriteMemory(u16 location, u8 value)
     return false;
 }
 
-void GbGpuState::CycleOamRead()
+GpuTickResult GbGpuState::CycleOamRead()
 {
     if (modeCycles == OAM_READ_CYCLES) {
         mode = GbGpuMode::VRAM_READ;
@@ -142,9 +140,10 @@ void GbGpuState::CycleOamRead()
     } else {
         modeCycles++;
     }
+    return {0};
 }
 
-void GbGpuState::CycleVramRead()
+GpuTickResult GbGpuState::CycleVramRead()
 {
     if (modeCycles < SCREEN_WIDTH) {
         DrawScanlinePixel(modeCycles);
@@ -155,15 +154,17 @@ void GbGpuState::CycleVramRead()
     } else {
         modeCycles++;
     }
+    return {0};
 }
 
-void GbGpuState::CycleHblank()
+GpuTickResult GbGpuState::CycleHblank()
 {
     if (modeCycles == HBLANK_CYCLES) {
         currentScanline++;
         if (currentScanline == 143) {
             mode = GbGpuMode::VBLANK;
             modeCycles = 0;
+            return {0b01};
         } else {
             mode = GbGpuMode::OAM_READ;
             modeCycles = 0;
@@ -171,9 +172,10 @@ void GbGpuState::CycleHblank()
     } else {
         modeCycles++;
     }
+    return {0};
 }
 
-void GbGpuState::CycleVblank()
+GpuTickResult GbGpuState::CycleVblank()
 {
     if (modeCycles == VBLANK_CYCLES) {
         currentScanline++;
@@ -187,6 +189,7 @@ void GbGpuState::CycleVblank()
     } else {
         modeCycles++;
     }
+    return {0};
 }
 
 void GbGpuState::DrawScanlinePixel(u8 x)

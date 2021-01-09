@@ -22,6 +22,17 @@ std::string FlagSet::ToString() const
     return ss.str();
 }
 
+std::string InterruptSet::ToString() const
+{
+    std::stringstream ss;
+    ss << '{';
+    ss << '\t' << "\"previousValue\": " << std::hex << (int)previousValue << ',';
+    ss << '\t' << "\"value\": " << std::hex << (int)value << ' ';
+    ss << '\t' << "\"withInstructionDelay\": " << std::hex << (int)withInstructionDelay << ' ';
+    ss << '}';
+    return ss.str();
+}
+
 std::string MemoryWrite::ToString() const
 {
     std::stringstream ss;
@@ -50,6 +61,7 @@ std::string InstructionResult::ToString() const
     std::stringstream ss;
     ss << '{';
     ss << '\t' << "\"flagSet\": " << (flagSet.has_value() ? flagSet.value().ToString() : "{}") << ',';
+    ss << '\t' << "\"interruptSet\": " << (interruptSet.has_value() ? interruptSet.value().ToString() : "{}") << ',';
     ss << '\t' << "\"memoryWrites\": [\n";
     for (size_t i = 0; i < memoryWrites.size(); ++i) {
         ss << "\t\t" << memoryWrites[i].ToString();
@@ -79,6 +91,20 @@ void ApplyInstructionResult(GbCpuState * cpu, MemoryState * memoryState, Instruc
         memoryState->Write(memWrite.GetLocation(), memWrite.GetValue());
     }
     gb4e::ui::applyMemoryTimeNs = (std::chrono::high_resolution_clock::now() - beforeMem).count();
+
+    auto beforeInterrupts = std::chrono::high_resolution_clock::now();
+    if (cpu->HasPendingImeEnable()) {
+        cpu->SetInterruptMasterEnable(true);
+    }
+    if (result.GetInterruptSet().has_value()) {
+        auto interruptSet = result.GetInterruptSet().value();
+        if (interruptSet.GetWithInstructionDelay()) {
+            cpu->EnableInterruptsWithDelay();
+        } else {
+            cpu->SetInterruptMasterEnable(interruptSet.GetValue());
+        }
+    }
+    gb4e::ui::applyInterruptsTimeNs = (std::chrono::high_resolution_clock::now() - beforeInterrupts).count();
 
     auto beforeFlags = std::chrono::high_resolution_clock::now();
     if (result.GetFlagSet().has_value()) {

@@ -54,18 +54,6 @@ u16 GbCpuState::Get16BitRegisterValue(Register const reg) const
     assert(reg.Is16Bit());
     return registers[reg.GetIndex()];
 }
-/*
-u8 GbCpuState::Get8BitMemoryValue(u16 location) const
-{
-    return memory[location];
-}
-
-u16 GbCpuState::Get16BitMemoryValue(u16 location) const
-{
-    assert(location < 0xFFFF);
-    return ((u16)Get8BitMemoryValue(location)) | ((u16)Get8BitMemoryValue(location + 1) << 8);
-}
-*/
 
 std::optional<u8> GbCpuState::ReadMemory(u16 location) const
 {
@@ -80,6 +68,22 @@ std::optional<u8> GbCpuState::ReadMemory(u16 location) const
     }
     if (location >= 0xA000 && location <= 0xBFFF) {
         return {};
+    }
+    if (location == 0xFF00) {
+        u8 ret = 0x0F;
+        if (!(joypSelect & 0b01)) {
+            ret &= dpad;
+        }
+        if (!(joypSelect & 0b10)) {
+            ret &= buttons;
+        }
+        return ret;
+    }
+    if (location == 0xFF0F) {
+        return interruptFlags;
+    }
+    if (location == 0xFFFF) {
+        return interruptEnable;
     }
     return memory[location];
 }
@@ -114,28 +118,24 @@ void GbCpuState::Set16BitRegisterValue(Register const reg, u16 value)
     registers[reg.GetIndex()] = value;
 }
 
-/*
-void GbCpuState::Set8BitMemoryValue(u16 location, u8 value)
-{
-    if (memoryWriteHandlers.find(location) != memoryWriteHandlers.end()) {
-        bool allowWrite = memoryWriteHandlers.at(location)(this, location, value);
-        if (allowWrite) {
-            memory[location] = value;
-        } else {
-            logger->Infof(
-                "Attempt to write value=%02x to location=%04x was prevented by memory write handler", value, location);
-        }
-    } else {
-        memory[location] = value;
-    }
-}
-*/
-
 bool GbCpuState::WriteMemory(u16 location, u8 value)
 {
     if (location == 0xFF50 && value) {
         isBootromActive = false;
         memory[location] = value;
+        return true;
+    }
+    if (location == 0xFF00) {
+        // 0b11 = return 0x0F, 0b10 = return dpad, 0b01 = return buttons, 0b00 = return buttons & dpad
+        joypSelect = BITS<4, 5>(value) >> 4;
+        return true;
+    }
+    if (location == 0xFF0F) {
+        interruptFlags = value;
+        return true;
+    }
+    if (location == 0xFFFF) {
+        interruptEnable = value;
         return true;
     }
     if (memoryWriteHandlers.find(location) != memoryWriteHandlers.end()) {

@@ -18,7 +18,7 @@ Instruction const INSTR_03(0x03, 0x0300, "INC BC", 1, 2, Inc<RegisterName::BC>);
 Instruction const INSTR_04(0x04, 0x0400, "INC B", 1, 1, Inc<RegisterName::B>);
 Instruction const INSTR_05(0x05, 0x0500, "DEC B", 1, 1, Dec<RegisterName::B>);
 Instruction const INSTR_06(0x06, 0x0600, "LD B, d8", 2, 2, LdD8<RegisterName::B>);
-// 07
+Instruction const INSTR_07(0x07, 0x0700, "RLCA", 1, 1, Rlca);
 // 08
 Instruction const INSTR_09(0x09, 0x0900, "ADD HL, BC", 1, 2, Add<RegisterName::HL, RegisterName::BC>);
 Instruction const INSTR_0A(0x0A, 0x0A00, "LD A, (BC)", 1, 2, LdFromAddrReg<RegisterName::A, RegisterName::DE>);
@@ -54,24 +54,24 @@ Instruction const INSTR_26(0x26, 0x2600, "LD H, d8", 2, 2, LdD8<RegisterName::H>
 // 27
 Instruction const INSTR_28(0x28, 0x2800, "JR Z, s8", 2, 2, JrFlagS8<0b10000000>); // TODO: Conditional 3 cycles
 Instruction const INSTR_29(0x29, 0x2900, "ADD HL, HL", 1, 2, Add<RegisterName::HL, RegisterName::HL>);
-// 2A
+Instruction const INSTR_2A(0x2A, 0x2A00, "LD A, (HL+)", 1, 2, LdFromAddrReg<RegisterName::A, RegisterName::HL, 1>);
 Instruction const INSTR_2B(0x2B, 0x2B00, "DEC HL", 1, 2, Dec<RegisterName::HL>);
 Instruction const INSTR_2C(0x2C, 0x2C00, "INC L", 1, 1, Inc<RegisterName::L>);
 Instruction const INSTR_2D(0x2D, 0x2D00, "DEC L", 1, 1, Dec<RegisterName::L>);
 Instruction const INSTR_2E(0x2E, 0x2E00, "LD L, d8", 2, 2, LdD8<RegisterName::L>);
-// 2F
+Instruction const INSTR_2F(0x2F, 0x2F00, "CPL", 1, 1, Cpl);
 
 Instruction const INSTR_30(0x30, 0x3000, "JR NC, s8", 2, 2, JrNFlagS8<0b00010000>); // TODO: Conditional 3 cycles
 Instruction const INSTR_31(0x31, 0x3100, "LD SP, d16", 3, 3, LdD16<RegisterName::SP>);
 Instruction const INSTR_32(0x32, 0x3200, "LD (HL-), A", 1, 2, LdHlIncDecA<-1>);
 Instruction const INSTR_33(0x33, 0x3300, "INC SP", 1, 2, Inc<RegisterName::SP>);
-// 34
+Instruction const INSTR_34(0x34, 0x3400, "INC (HL)", 1, 3, IncHlAddr);
 // 35
-// 36
+Instruction const INSTR_36(0x36, 0x3600, "LD (HL), d8", 2, 3, LdHlD8);
 // 37
 Instruction const INSTR_38(0x38, 0x3800, "JR C, s8", 2, 2, JrFlagS8<0b0001>);
 Instruction const INSTR_39(0x39, 0x3900, "ADD HL, SP", 1, 2, Add<RegisterName::HL, RegisterName::SP>);
-// 3A
+Instruction const INSTR_3A(0x3A, 0x3A00, "LD A, (HL-)", 1, 2, LdFromAddrReg<RegisterName::A, RegisterName::HL, -1>);
 Instruction const INSTR_3B(0x3B, 0x3B00, "DEC SP", 1, 2, Dec<RegisterName::SP>);
 Instruction const INSTR_3C(0x3C, 0x3C00, "INC A", 1, 1, Inc<RegisterName::A>);
 Instruction const INSTR_3D(0x3D, 0x3D00, "DEC A", 1, 1, Dec<RegisterName::A>);
@@ -84,7 +84,7 @@ Instruction const INSTR_42(0x42, 0x4200, "LD B, D", 1, 1, Ld<RegisterName::B, Re
 Instruction const INSTR_43(0x43, 0x4300, "LD B, E", 1, 1, Ld<RegisterName::B, RegisterName::E>);
 Instruction const INSTR_44(0x44, 0x4400, "LD B, H", 1, 1, Ld<RegisterName::B, RegisterName::H>);
 Instruction const INSTR_45(0x45, 0x4500, "LD B, L", 1, 1, Ld<RegisterName::B, RegisterName::L>);
-// 46
+Instruction const INSTR_46(0x46, 0x4600, "LD B, (HL)", 1, 2, LdFromAddrReg<RegisterName::B, RegisterName::HL>);
 Instruction const INSTR_47(0x47, 0x4700, "LD B, A", 1, 1, Ld<RegisterName::B, RegisterName::A>);
 Instruction const INSTR_48(0x48, 0x4800, "LD C, B", 1, 1, Ld<RegisterName::C, RegisterName::B>);
 Instruction const INSTR_49(0x49, 0x4900, "LD C, C", 1, 1, Ld<RegisterName::C, RegisterName::C>);
@@ -92,7 +92,7 @@ Instruction const INSTR_4A(0x4A, 0x4A00, "LD C, D", 1, 1, Ld<RegisterName::C, Re
 Instruction const INSTR_4B(0x4B, 0x4B00, "LD C, E", 1, 1, Ld<RegisterName::C, RegisterName::E>);
 Instruction const INSTR_4C(0x4C, 0x4C00, "LD C, H", 1, 1, Ld<RegisterName::C, RegisterName::H>);
 Instruction const INSTR_4D(0x4D, 0x4D00, "LD C, L", 1, 1, Ld<RegisterName::C, RegisterName::L>);
-// 4E
+Instruction const INSTR_4E(0x4E, 0x4E00, "LD C, (HL)", 1, 2, LdFromAddrReg<RegisterName::B, RegisterName::HL>);
 Instruction const INSTR_4F(0x4F, 0x4F00, "LD C, A", 1, 1, Ld<RegisterName::C, RegisterName::A>);
 
 Instruction const INSTR_50(0x50, 0x5000, "LD D, B", 1, 1, Ld<RegisterName::D, RegisterName::B>);
@@ -101,7 +101,7 @@ Instruction const INSTR_52(0x52, 0x5200, "LD D, D", 1, 1, Ld<RegisterName::D, Re
 Instruction const INSTR_53(0x53, 0x5300, "LD D, E", 1, 1, Ld<RegisterName::D, RegisterName::E>);
 Instruction const INSTR_54(0x54, 0x5400, "LD D, H", 1, 1, Ld<RegisterName::D, RegisterName::H>);
 Instruction const INSTR_55(0x55, 0x5500, "LD D, L", 1, 1, Ld<RegisterName::D, RegisterName::L>);
-// 56
+Instruction const INSTR_56(0x56, 0x5600, "LD D, (HL)", 1, 2, LdFromAddrReg<RegisterName::D, RegisterName::HL>);
 Instruction const INSTR_57(0x57, 0x5700, "LD D, A", 1, 1, Ld<RegisterName::D, RegisterName::A>);
 Instruction const INSTR_58(0x58, 0x5800, "LD E, B", 1, 1, Ld<RegisterName::E, RegisterName::B>);
 Instruction const INSTR_59(0x59, 0x5900, "LD E, C", 1, 1, Ld<RegisterName::E, RegisterName::C>);
@@ -109,7 +109,7 @@ Instruction const INSTR_5A(0x5A, 0x5A00, "LD E, D", 1, 1, Ld<RegisterName::E, Re
 Instruction const INSTR_5B(0x5B, 0x5B00, "LD E, E", 1, 1, Ld<RegisterName::E, RegisterName::E>);
 Instruction const INSTR_5C(0x5C, 0x5C00, "LD E, H", 1, 1, Ld<RegisterName::E, RegisterName::H>);
 Instruction const INSTR_5D(0x5D, 0x5D00, "LD E, L", 1, 1, Ld<RegisterName::E, RegisterName::L>);
-// 5E
+Instruction const INSTR_5E(0x5E, 0x5E00, "LD E, (HL)", 1, 2, LdFromAddrReg<RegisterName::E, RegisterName::HL>);
 Instruction const INSTR_5F(0x5F, 0x5F00, "LD E, A", 1, 1, Ld<RegisterName::E, RegisterName::A>);
 
 Instruction const INSTR_60(0x60, 0x6000, "LD H, B", 1, 1, Ld<RegisterName::H, RegisterName::B>);
@@ -118,7 +118,7 @@ Instruction const INSTR_62(0x62, 0x6200, "LD H, D", 1, 1, Ld<RegisterName::H, Re
 Instruction const INSTR_63(0x63, 0x6300, "LD H, E", 1, 1, Ld<RegisterName::H, RegisterName::E>);
 Instruction const INSTR_64(0x64, 0x6400, "LD H, H", 1, 1, Ld<RegisterName::H, RegisterName::H>);
 Instruction const INSTR_65(0x65, 0x6500, "LD H, L", 1, 1, Ld<RegisterName::H, RegisterName::L>);
-// 66
+Instruction const INSTR_66(0x66, 0x6600, "LD H, (HL)", 1, 2, LdFromAddrReg<RegisterName::H, RegisterName::HL>);
 Instruction const INSTR_67(0x67, 0x6700, "LD H, A", 1, 1, Ld<RegisterName::H, RegisterName::A>);
 Instruction const INSTR_68(0x68, 0x6800, "LD L, B", 1, 1, Ld<RegisterName::L, RegisterName::B>);
 Instruction const INSTR_69(0x69, 0x6900, "LD L, C", 1, 1, Ld<RegisterName::L, RegisterName::C>);
@@ -126,7 +126,7 @@ Instruction const INSTR_6A(0x6A, 0x6A00, "LD L, D", 1, 1, Ld<RegisterName::L, Re
 Instruction const INSTR_6B(0x6B, 0x6B00, "LD L, E", 1, 1, Ld<RegisterName::L, RegisterName::E>);
 Instruction const INSTR_6C(0x6C, 0x6C00, "LD L, H", 1, 1, Ld<RegisterName::L, RegisterName::H>);
 Instruction const INSTR_6D(0x6D, 0x6D00, "LD L, L", 1, 1, Ld<RegisterName::L, RegisterName::L>);
-// 6E
+Instruction const INSTR_6E(0x6E, 0x6E00, "LD L, (HL)", 1, 2, LdFromAddrReg<RegisterName::L, RegisterName::HL>);
 Instruction const INSTR_6F(0x6F, 0x6F00, "LD L, A", 1, 1, Ld<RegisterName::L, RegisterName::A>);
 
 Instruction const INSTR_70(0x70, 0x7000, "LD (HL), B", 1, 2, LdMemViaReg<RegisterName::HL, RegisterName::B>);
@@ -143,6 +143,7 @@ Instruction const INSTR_7A(0x7A, 0x7A00, "LD A, D", 1, 1, Ld<RegisterName::A, Re
 Instruction const INSTR_7B(0x7B, 0x7B00, "LD A, E", 1, 1, Ld<RegisterName::A, RegisterName::E>);
 Instruction const INSTR_7C(0x7C, 0x7C00, "LD A, H", 1, 1, Ld<RegisterName::A, RegisterName::H>);
 Instruction const INSTR_7D(0x7D, 0x7D00, "LD A, L", 1, 1, Ld<RegisterName::A, RegisterName::L>);
+Instruction const INSTR_7E(0x7E, 0x7E00, "LD A, (HL)", 1, 2, LdFromAddrReg<RegisterName::A, RegisterName::HL>);
 // 7E
 Instruction const INSTR_7F(0x7F, 0x7F00, "LD A, A", 1, 1, Ld<RegisterName::A, RegisterName::A>);
 
@@ -154,7 +155,15 @@ Instruction const INSTR_84(0x84, 0x8400, "ADD A, H", 1, 1, Add<RegisterName::A, 
 Instruction const INSTR_85(0x85, 0x8500, "ADD A, L", 1, 1, Add<RegisterName::A, RegisterName::L>);
 Instruction const INSTR_86(0x86, 0x8600, "ADD A, (HL)", 1, 2, AddFromAddrReg<RegisterName::A, RegisterName::HL>);
 Instruction const INSTR_87(0x87, 0x8700, "ADD A, A", 1, 1, Add<RegisterName::A, RegisterName::A>);
-// 88-8F
+
+Instruction const INSTR_88(0x88, 0x8800, "ADC B", 1, 2, Adc<RegisterName::B>);
+Instruction const INSTR_89(0x89, 0x8900, "ADC C", 1, 2, Adc<RegisterName::C>);
+Instruction const INSTR_8A(0x8A, 0x8A00, "ADC D", 1, 2, Adc<RegisterName::D>);
+Instruction const INSTR_8B(0x8B, 0x8B00, "ADC E", 1, 2, Adc<RegisterName::E>);
+Instruction const INSTR_8C(0x8C, 0x8C00, "ADC H", 1, 2, Adc<RegisterName::H>);
+Instruction const INSTR_8D(0x8D, 0x8D00, "ADC L", 1, 2, Adc<RegisterName::L>);
+Instruction const INSTR_8E(0x8E, 0x8E00, "ADC (HL)", 1, 2, Adc<RegisterName::HL>);
+Instruction const INSTR_8F(0x8F, 0x8F00, "ADC A", 1, 2, Adc<RegisterName::A>);
 
 Instruction const INSTR_90(0x90, 0x9000, "SUB B", 1, 1, Sub<RegisterName::B>);
 Instruction const INSTR_91(0x91, 0x9100, "SUB C", 1, 1, Sub<RegisterName::C>);
@@ -181,7 +190,7 @@ Instruction const INSTR_AA(0xAA, 0xAA00, "XOR D", 1, 1, Xor<RegisterName::D>);
 Instruction const INSTR_AB(0xAB, 0xAB00, "XOR E", 1, 1, Xor<RegisterName::E>);
 Instruction const INSTR_AC(0xAC, 0xAC00, "XOR H", 1, 1, Xor<RegisterName::H>);
 Instruction const INSTR_AD(0xAD, 0xAD00, "XOR L", 1, 1, Xor<RegisterName::L>);
-// AE
+Instruction const INSTR_AE(0xAE, 0xAE00, "XOR (HL)", 1, 2, Xor<RegisterName::HL>);
 Instruction const INSTR_AF(0xAF, 0xAF00, "XOR A", 1, 1, Xor<RegisterName::A>);
 
 Instruction const INSTR_B0(0xB0, 0xB000, "OR B", 1, 1, Or<RegisterName::B>);
@@ -202,13 +211,16 @@ Instruction const INSTR_C1(0xC1, 0xC100, "POP BC", 1, 3, Pop<RegisterName::BC>);
 Instruction const INSTR_C3(0xC3, 0xC300, "JP a16", 3, 4, JpA16);
 // C4
 Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push<RegisterName::BC>);
-// C6-C8
+// C6
+Instruction const INSTR_C7(0xC7, 0xC700, "RST 0", 1, 4, Rst<0>);
+Instruction const INSTR_C8(0xC8, 0xC800, "RET Z", 1, 2, RetFlag<0b10000000>);
 Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret);
 // CA
 Instruction const INSTR_CB(0xCB, 0xCB00, "INVALID CB", 1, 1, APPLIER_NOP);
 // CC
 Instruction const INSTR_CD(0xCD, 0xCD00, "CALL a16", 3, 6, CallA16);
-// CE-CF
+Instruction const INSTR_CE(0xCE, 0xCE00, "ADC d8", 2, 2, AdcD8);
+Instruction const INSTR_CF(0xCF, 0xCF00, "RST 1", 1, 4, Rst<1>);
 
 Instruction const INSTR_D0(0xD0, 0xD000, "RET NC", 1, 2, RetNFlag<0b00010000>);
 Instruction const INSTR_D1(0xD1, 0xD100, "POP DE", 1, 3, Pop<RegisterName::DE>);
@@ -216,11 +228,16 @@ Instruction const INSTR_D1(0xD1, 0xD100, "POP DE", 1, 3, Pop<RegisterName::DE>);
 Instruction const INSTR_D3(0xD3, 0xD300, "INVALID D3", 1, 1, APPLIER_NOP);
 // D4
 Instruction const INSTR_D5(0xD5, 0xD500, "PUSH DE", 1, 4, Push<RegisterName::DE>);
-// D6-DA
+// D6
+Instruction const INSTR_D7(0xD7, 0xD700, "RST 2", 1, 4, Rst<2>);
+Instruction const INSTR_D8(0xD8, 0xD800, "RET C", 1, 2, RetFlag<0b00010000>);
+Instruction const INSTR_D9(0xD9, 0xD900, "RETI", 1, 4, Reti);
+// DA
 Instruction const INSTR_DB(0xDB, 0xDB00, "INVALID DB", 1, 1, APPLIER_NOP);
 // DC
 Instruction const INSTR_DD(0xDD, 0xDD00, "INVALID DD", 1, 1, APPLIER_NOP);
-// DE-DF
+// DE
+Instruction const INSTR_DF(0xDF, 0xDF00, "RST 3", 1, 4, Rst<3>);
 
 Instruction const INSTR_E0(0xE0, 0xE000, "LD (a8), A", 2, 3, LdA8);
 Instruction const INSTR_E1(0xE1, 0xE100, "POP HL", 1, 3, Pop<RegisterName::HL>);
@@ -228,25 +245,32 @@ Instruction const INSTR_E2(0xE2, 0xE200, "LD (C), A", 1, 2, LdMemViaReg<Register
 Instruction const INSTR_E3(0xE3, 0xE300, "INVALID E3", 1, 1, APPLIER_NOP);
 Instruction const INSTR_E4(0xE4, 0xE400, "INVALID E4", 1, 1, APPLIER_NOP);
 Instruction const INSTR_E5(0xE5, 0xE500, "PUSH HL", 1, 4, Push<RegisterName::HL>);
-// E6-E9
+Instruction const INSTR_E6(0xE6, 0xE600, "AND A, d8", 2, 2, AndD8);
+Instruction const INSTR_E7(0xE7, 0xE700, "RST 4", 1, 4, Rst<4>);
+// E8
+Instruction const INSTR_E9(0xE9, 0xE900, "JP HL", 1, 1, JpHl);
 Instruction const INSTR_EA(0xEA, 0xEA00, "LD (a16), A", 3, 4, LdA16<RegisterName::A>);
 Instruction const INSTR_EB(0xEB, 0xEB00, "INVALID EB", 1, 1, APPLIER_NOP);
 Instruction const INSTR_EC(0xEC, 0xEC00, "INVALID EC", 1, 1, APPLIER_NOP);
 Instruction const INSTR_ED(0xED, 0xED00, "INVALID ED", 1, 1, APPLIER_NOP);
-// EE-EF
+// EE
+Instruction const INSTR_EF(0xEF, 0xEF00, "RST 5", 1, 4, Rst<5>);
 
 Instruction const INSTR_F0(0xF0, 0xF000, "LD A, (a8)", 2, 3, LdFromA8<RegisterName::A>);
 Instruction const INSTR_F1(0xF1, 0xF100, "POP AF", 1, 3, Pop<RegisterName::AF>);
-// F2-F3
+// F2
+Instruction const INSTR_F3(0xF3, 0xF300, "DI", 1, 1, ToggleInterrupts<false>);
 Instruction const INSTR_F4(0xF4, 0xF400, "INVALID F4", 1, 1, APPLIER_NOP);
 Instruction const INSTR_F5(0xF5, 0xF500, "PUSH AF", 1, 4, Push<RegisterName::AF>);
-// F6-F9
+// F6
+Instruction const INSTR_F7(0xF7, 0xF700, "RST 6", 1, 4, Rst<6>);
+// F8-F9
 Instruction const INSTR_FA(0xFA, 0xFA00, "LD A, (a16)", 3, 4, LdFromA16<RegisterName::A>);
-// FB
+Instruction const INSTR_FB(0xFB, 0xFB00, "EI", 1, 1, ToggleInterrupts<true>);
 Instruction const INSTR_FC(0xFC, 0xFC00, "INVALID FC", 1, 1, APPLIER_NOP);
 Instruction const INSTR_FD(0xFD, 0xFD00, "INVALID FD", 1, 1, APPLIER_NOP);
 Instruction const INSTR_FE(0xFE, 0xFE00, "CP d8", 2, 2, CpD8);
-// FF
+Instruction const INSTR_FF(0xFF, 0xFF00, "RST 7", 1, 4, Rst<7>);
 
 Instruction const INSTR_CB10(0xCB, 0xCB10, "RL B", 2, 2, Rl<RegisterName::B>);
 Instruction const INSTR_CB11(0xCB, 0xCB11, "RL C", 2, 2, Rl<RegisterName::C>);
@@ -256,6 +280,15 @@ Instruction const INSTR_CB14(0xCB, 0xCB14, "RL H", 2, 2, Rl<RegisterName::H>);
 Instruction const INSTR_CB15(0xCB, 0xCB15, "RL L", 2, 2, Rl<RegisterName::L>);
 // CB16
 Instruction const INSTR_CB17(0xCB, 0xCB17, "RL A", 2, 2, Rl<RegisterName::A>);
+
+Instruction const INSTR_CB30(0xCB, 0xCB30, "SWAP B", 2, 2, Swap<RegisterName::B>);
+Instruction const INSTR_CB31(0xCB, 0xCB31, "SWAP C", 2, 2, Swap<RegisterName::C>);
+Instruction const INSTR_CB32(0xCB, 0xCB32, "SWAP D", 2, 2, Swap<RegisterName::D>);
+Instruction const INSTR_CB33(0xCB, 0xCB33, "SWAP E", 2, 2, Swap<RegisterName::E>);
+Instruction const INSTR_CB34(0xCB, 0xCB34, "SWAP H", 2, 2, Swap<RegisterName::H>);
+Instruction const INSTR_CB35(0xCB, 0xCB35, "SWAP L", 2, 2, Swap<RegisterName::L>);
+Instruction const INSTR_CB36(0xCB, 0xCB36, "SWAP (HL)", 2, 4, Swap<RegisterName::HL>);
+Instruction const INSTR_CB37(0xCB, 0xCB37, "SWAP A", 2, 2, Swap<RegisterName::A>);
 
 Instruction const INSTR_CB40(0xCB, 0xCB40, "BIT 0, B", 2, 2, Bit<0, RegisterName::B>);
 Instruction const INSTR_CB41(0xCB, 0xCB41, "BIT 0, C", 2, 2, Bit<0, RegisterName::C>);
@@ -325,6 +358,154 @@ Instruction const INSTR_CB7D(0xCB, 0xCB7D, "BIT 7, L", 2, 2, Bit<7, RegisterName
 // CB7E
 Instruction const INSTR_CB7F(0xCB, 0xCB7F, "BIT 7, A", 2, 2, Bit<7, RegisterName::A>);
 
+Instruction const INSTR_CB80(0xCB, 0xCB80, "RES 0, B", 2, 2, Res<0, RegisterName::B>);
+Instruction const INSTR_CB81(0xCB, 0xCB81, "RES 0, C", 2, 2, Res<0, RegisterName::C>);
+Instruction const INSTR_CB82(0xCB, 0xCB82, "RES 0, D", 2, 2, Res<0, RegisterName::D>);
+Instruction const INSTR_CB83(0xCB, 0xCB83, "RES 0, E", 2, 2, Res<0, RegisterName::E>);
+Instruction const INSTR_CB84(0xCB, 0xCB84, "RES 0, H", 2, 2, Res<0, RegisterName::H>);
+Instruction const INSTR_CB85(0xCB, 0xCB85, "RES 0, L", 2, 2, Res<0, RegisterName::L>);
+Instruction const INSTR_CB86(0xCB, 0xCB86, "RES 0, (HL)", 2, 4, Res<0, RegisterName::HL>);
+Instruction const INSTR_CB87(0xCB, 0xCB87, "RES 0, A", 2, 2, Res<0, RegisterName::A>);
+
+Instruction const INSTR_CB88(0xCB, 0xCB88, "RES 1, B", 2, 2, Res<1, RegisterName::B>);
+Instruction const INSTR_CB89(0xCB, 0xCB89, "RES 1, C", 2, 2, Res<1, RegisterName::C>);
+Instruction const INSTR_CB8A(0xCB, 0xCB8A, "RES 1, D", 2, 2, Res<1, RegisterName::D>);
+Instruction const INSTR_CB8B(0xCB, 0xCB8B, "RES 1, E", 2, 2, Res<1, RegisterName::E>);
+Instruction const INSTR_CB8C(0xCB, 0xCB8C, "RES 1, H", 2, 2, Res<1, RegisterName::H>);
+Instruction const INSTR_CB8D(0xCB, 0xCB8D, "RES 1, L", 2, 2, Res<1, RegisterName::L>);
+Instruction const INSTR_CB8E(0xCB, 0xCB8E, "RES 1, (HL)", 2, 4, Res<1, RegisterName::HL>);
+Instruction const INSTR_CB8F(0xCB, 0xCB8F, "RES 1, A", 2, 2, Res<1, RegisterName::A>);
+
+Instruction const INSTR_CB90(0xCB, 0xCB90, "RES 2, B", 2, 2, Res<2, RegisterName::B>);
+Instruction const INSTR_CB91(0xCB, 0xCB91, "RES 2, C", 2, 2, Res<2, RegisterName::C>);
+Instruction const INSTR_CB92(0xCB, 0xCB92, "RES 2, D", 2, 2, Res<2, RegisterName::D>);
+Instruction const INSTR_CB93(0xCB, 0xCB93, "RES 2, E", 2, 2, Res<2, RegisterName::E>);
+Instruction const INSTR_CB94(0xCB, 0xCB94, "RES 2, H", 2, 2, Res<2, RegisterName::H>);
+Instruction const INSTR_CB95(0xCB, 0xCB95, "RES 2, L", 2, 2, Res<2, RegisterName::L>);
+Instruction const INSTR_CB96(0xCB, 0xCB96, "RES 2, (HL)", 2, 4, Res<2, RegisterName::HL>);
+Instruction const INSTR_CB97(0xCB, 0xCB97, "RES 2, A", 2, 2, Res<2, RegisterName::A>);
+
+Instruction const INSTR_CB98(0xCB, 0xCB98, "RES 3, B", 2, 2, Res<3, RegisterName::B>);
+Instruction const INSTR_CB99(0xCB, 0xCB99, "RES 3, C", 2, 2, Res<3, RegisterName::C>);
+Instruction const INSTR_CB9A(0xCB, 0xCB9A, "RES 3, D", 2, 2, Res<3, RegisterName::D>);
+Instruction const INSTR_CB9B(0xCB, 0xCB9B, "RES 3, E", 2, 2, Res<3, RegisterName::E>);
+Instruction const INSTR_CB9C(0xCB, 0xCB9C, "RES 3, H", 2, 2, Res<3, RegisterName::H>);
+Instruction const INSTR_CB9D(0xCB, 0xCB9D, "RES 3, L", 2, 2, Res<3, RegisterName::L>);
+Instruction const INSTR_CB9E(0xCB, 0xCB9E, "RES 3, (HL)", 2, 4, Res<3, RegisterName::HL>);
+Instruction const INSTR_CB9F(0xCB, 0xCB9F, "RES 3, A", 2, 2, Res<3, RegisterName::A>);
+
+Instruction const INSTR_CBA0(0xCB, 0xCBA0, "RES 4, B", 2, 2, Res<4, RegisterName::B>);
+Instruction const INSTR_CBA1(0xCB, 0xCBA1, "RES 4, C", 2, 2, Res<4, RegisterName::C>);
+Instruction const INSTR_CBA2(0xCB, 0xCBA2, "RES 4, D", 2, 2, Res<4, RegisterName::D>);
+Instruction const INSTR_CBA3(0xCB, 0xCBA3, "RES 4, E", 2, 2, Res<4, RegisterName::E>);
+Instruction const INSTR_CBA4(0xCB, 0xCBA4, "RES 4, H", 2, 2, Res<4, RegisterName::H>);
+Instruction const INSTR_CBA5(0xCB, 0xCBA5, "RES 4, L", 2, 2, Res<4, RegisterName::L>);
+Instruction const INSTR_CBA6(0xCB, 0xCBA6, "RES 4, (HL)", 2, 4, Res<4, RegisterName::HL>);
+Instruction const INSTR_CBA7(0xCB, 0xCBA7, "RES 4, A", 2, 2, Res<4, RegisterName::A>);
+
+Instruction const INSTR_CBA8(0xCB, 0xCBA8, "RES 5, B", 2, 2, Res<5, RegisterName::B>);
+Instruction const INSTR_CBA9(0xCB, 0xCBA9, "RES 5, C", 2, 2, Res<5, RegisterName::C>);
+Instruction const INSTR_CBAA(0xCB, 0xCBAA, "RES 5, D", 2, 2, Res<5, RegisterName::D>);
+Instruction const INSTR_CBAB(0xCB, 0xCBAB, "RES 5, E", 2, 2, Res<5, RegisterName::E>);
+Instruction const INSTR_CBAC(0xCB, 0xCBAC, "RES 5, H", 2, 2, Res<5, RegisterName::H>);
+Instruction const INSTR_CBAD(0xCB, 0xCBAD, "RES 5, L", 2, 2, Res<5, RegisterName::L>);
+Instruction const INSTR_CBAE(0xCB, 0xCBAE, "RES 5, (HL)", 2, 4, Res<5, RegisterName::HL>);
+Instruction const INSTR_CBAF(0xCB, 0xCBAF, "RES 5, A", 2, 2, Res<5, RegisterName::A>);
+
+Instruction const INSTR_CBB0(0xCB, 0xCBB0, "RES 6, B", 2, 2, Res<6, RegisterName::B>);
+Instruction const INSTR_CBB1(0xCB, 0xCBB1, "RES 6, C", 2, 2, Res<6, RegisterName::C>);
+Instruction const INSTR_CBB2(0xCB, 0xCBB2, "RES 6, D", 2, 2, Res<6, RegisterName::D>);
+Instruction const INSTR_CBB3(0xCB, 0xCBB3, "RES 6, E", 2, 2, Res<6, RegisterName::E>);
+Instruction const INSTR_CBB4(0xCB, 0xCBB4, "RES 6, H", 2, 2, Res<6, RegisterName::H>);
+Instruction const INSTR_CBB5(0xCB, 0xCBB5, "RES 6, L", 2, 2, Res<6, RegisterName::L>);
+Instruction const INSTR_CBB6(0xCB, 0xCBB6, "RES 6, (HL)", 2, 4, Res<6, RegisterName::HL>);
+Instruction const INSTR_CBB7(0xCB, 0xCBB7, "RES 6, A", 2, 2, Res<6, RegisterName::A>);
+
+Instruction const INSTR_CBB8(0xCB, 0xCBB8, "RES 7, B", 2, 2, Res<7, RegisterName::B>);
+Instruction const INSTR_CBB9(0xCB, 0xCBB9, "RES 7, C", 2, 2, Res<7, RegisterName::C>);
+Instruction const INSTR_CBBA(0xCB, 0xCBBA, "RES 7, D", 2, 2, Res<7, RegisterName::D>);
+Instruction const INSTR_CBBB(0xCB, 0xCBBB, "RES 7, E", 2, 2, Res<7, RegisterName::E>);
+Instruction const INSTR_CBBC(0xCB, 0xCBBC, "RES 7, H", 2, 2, Res<7, RegisterName::H>);
+Instruction const INSTR_CBBD(0xCB, 0xCBBD, "RES 7, L", 2, 2, Res<7, RegisterName::L>);
+Instruction const INSTR_CBBE(0xCB, 0xCBBE, "RES 7, (HL)", 2, 4, Res<7, RegisterName::HL>);
+Instruction const INSTR_CBBF(0xCB, 0xCBBF, "RES 7, A", 2, 2, Res<7, RegisterName::A>);
+
+/*
+
+
+&INSTR_CB80,
+&INSTR_CB81,
+&INSTR_CB82,
+&INSTR_CB83,
+&INSTR_CB84,
+&INSTR_CB85,
+&INSTR_CB86,
+&INSTR_CB87,
+
+&INSTR_CB88,
+&INSTR_CB89,
+&INSTR_CB8A,
+&INSTR_CB8B,
+&INSTR_CB8C,
+&INSTR_CB8D,
+&INSTR_CB8E,
+&INSTR_CB8F,
+
+&INSTR_CB90,
+&INSTR_CB91,
+&INSTR_CB92,
+&INSTR_CB93,
+&INSTR_CB94,
+&INSTR_CB95,
+&INSTR_CB96,
+&INSTR_CB97,
+
+&INSTR_CB98,
+&INSTR_CB99,
+&INSTR_CB9A,
+&INSTR_CB9B,
+&INSTR_CB9C,
+&INSTR_CB9D,
+&INSTR_CB9E,
+&INSTR_CB9F,
+
+&INSTR_CBA0,
+&INSTR_CBA1,
+&INSTR_CBA2,
+&INSTR_CBA3,
+&INSTR_CBA4,
+&INSTR_CBA5,
+&INSTR_CBA6,
+&INSTR_CBA7,
+
+&INSTR_CBA8,
+&INSTR_CBA9,
+&INSTR_CBAA,
+&INSTR_CBAB,
+&INSTR_CBAC,
+&INSTR_CBAD,
+&INSTR_CBAE,
+&INSTR_CBAF,
+
+&INSTR_CBB0,
+&INSTR_CBB1,
+&INSTR_CBB2,
+&INSTR_CBB3,
+&INSTR_CBB4,
+&INSTR_CBB5,
+&INSTR_CBB6,
+&INSTR_CBB7,
+
+&INSTR_CBB8,
+&INSTR_CBB9,
+&INSTR_CBBA,
+&INSTR_CBBB,
+&INSTR_CBBC,
+&INSTR_CBBD,
+&INSTR_CBBE,
+&INSTR_CBBF,
+*/
+
 // clang-format off
 std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_00,
@@ -334,7 +515,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_04,
     &INSTR_05,
     &INSTR_06,
-    &INSTR_INVALID,
+    &INSTR_07,
     &INSTR_INVALID,
     &INSTR_09,
     &INSTR_0A,
@@ -369,23 +550,23 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_INVALID,
     &INSTR_28,
     &INSTR_29,
-    &INSTR_INVALID, //2A
+    &INSTR_2A, //2A
     &INSTR_2B,
     &INSTR_2C,
     &INSTR_2D,
     &INSTR_2E,
-    &INSTR_INVALID, //2F
+    &INSTR_2F, //2F
     &INSTR_30, //30
     &INSTR_31,
     &INSTR_32,
     &INSTR_33,
-    &INSTR_INVALID,
+    &INSTR_34,
     &INSTR_INVALID, //35
-    &INSTR_INVALID,
+    &INSTR_36,
     &INSTR_INVALID,
     &INSTR_38,
     &INSTR_39,
-    &INSTR_INVALID, //3A
+    &INSTR_3A, //3A
     &INSTR_3B,
     &INSTR_3C,
     &INSTR_3D,
@@ -397,7 +578,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_43,
     &INSTR_44,
     &INSTR_45, //45
-    &INSTR_INVALID,
+    &INSTR_46,
     &INSTR_47,
     &INSTR_48,
     &INSTR_49,
@@ -405,7 +586,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_4B,
     &INSTR_4C,
     &INSTR_4D,
-    &INSTR_INVALID,
+    &INSTR_4E,
     &INSTR_4F, //4F
     &INSTR_50, //50
     &INSTR_51,
@@ -413,7 +594,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_53,
     &INSTR_54,
     &INSTR_55, //55
-    &INSTR_INVALID,
+    &INSTR_56,
     &INSTR_57,
     &INSTR_58,
     &INSTR_59,
@@ -421,7 +602,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_5B,
     &INSTR_5C,
     &INSTR_5D,
-    &INSTR_INVALID,
+    &INSTR_5E,
     &INSTR_5F, //5F
     &INSTR_60, //60
     &INSTR_61,
@@ -429,7 +610,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_63,
     &INSTR_64,
     &INSTR_65, //65
-    &INSTR_INVALID,
+    &INSTR_66,
     &INSTR_67,
     &INSTR_68,
     &INSTR_69,
@@ -437,7 +618,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_6B,
     &INSTR_6C,
     &INSTR_6D,
-    &INSTR_INVALID,
+    &INSTR_6E,
     &INSTR_6F, //6F
     &INSTR_70, //70
     &INSTR_71,
@@ -453,7 +634,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_7B,
     &INSTR_7C,
     &INSTR_7D,
-    &INSTR_INVALID,
+    &INSTR_7E,
     &INSTR_7F, //7F
     &INSTR_80, //80
     &INSTR_81,
@@ -463,14 +644,14 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_85, //85
     &INSTR_86,
     &INSTR_87,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, //8A
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, //8F
+    &INSTR_88,
+    &INSTR_89,
+    &INSTR_8A, //8A
+    &INSTR_8B,
+    &INSTR_8C,
+    &INSTR_8D,
+    &INSTR_8E,
+    &INSTR_8F, //8F
     &INSTR_90, //90
     &INSTR_91,
     &INSTR_92,
@@ -501,7 +682,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_AB,
     &INSTR_AC,
     &INSTR_AD,
-    &INSTR_INVALID,
+    &INSTR_AE,
     &INSTR_AF, //AF
     &INSTR_B0, //B0
     &INSTR_B1,
@@ -526,15 +707,15 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_INVALID,
     &INSTR_C5, //C5
     &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_C7,
+    &INSTR_C8,
     &INSTR_C9,
     &INSTR_INVALID, //CA
     &INSTR_CB,
     &INSTR_INVALID,
     &INSTR_CD,
-    &INSTR_INVALID,
-    &INSTR_INVALID, //CF
+    &INSTR_CE,
+    &INSTR_CF, //CF
     &INSTR_D0, //D0
     &INSTR_D1,
     &INSTR_INVALID,
@@ -542,47 +723,47 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_INVALID,
     &INSTR_D5, //D5
     &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_D7,
+    &INSTR_D8,
+    &INSTR_D9,
     &INSTR_INVALID, //DA
     &INSTR_DB,
     &INSTR_INVALID,
     &INSTR_DD,
     &INSTR_INVALID,
-    &INSTR_INVALID, //DF
+    &INSTR_DF, //DF
     &INSTR_E0, //E0
     &INSTR_E1,
     &INSTR_E2,
     &INSTR_E3,
     &INSTR_E4,
     &INSTR_E5, //E5
+    &INSTR_E6,
+    &INSTR_E7,
     &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_E9,
     &INSTR_EA, //EA
     &INSTR_EB,
     &INSTR_EC,
     &INSTR_ED,
     &INSTR_INVALID,
-    &INSTR_INVALID, //EF
+    &INSTR_EF, //EF
     &INSTR_F0, //F0
     &INSTR_F1,
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_F3,
     &INSTR_F4,
     &INSTR_F5, //F5
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_F7,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_FA, //FA
-    &INSTR_INVALID,
+    &INSTR_FB,
     &INSTR_FC,
     &INSTR_FD,
     &INSTR_FE,
-    &INSTR_INVALID, //FF
+    &INSTR_FF, //FF
 };
 std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID, // 00
@@ -633,14 +814,14 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // 2F
-    &INSTR_INVALID, // 30
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 35
-    &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_CB30, // 30
+    &INSTR_CB31,
+    &INSTR_CB32,
+    &INSTR_CB33,
+    &INSTR_CB34,
+    &INSTR_CB35, // 35
+    &INSTR_CB36,
+    &INSTR_CB37,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // 3A
@@ -713,70 +894,70 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_CB7D,
     &INSTR_INVALID,
     &INSTR_CB7F, // 7F
-    &INSTR_INVALID, // 80
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 85
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 8A
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 8F
-    &INSTR_INVALID, // 90
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 95
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 9A
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 9F
-    &INSTR_INVALID, // A0
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // A5
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // AA
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // AF
-    &INSTR_INVALID, // B0
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // B5
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // BA
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // BF
+    &INSTR_CB80,
+    &INSTR_CB81,
+    &INSTR_CB82,
+    &INSTR_CB83,
+    &INSTR_CB84,
+    &INSTR_CB85,
+    &INSTR_CB86,
+    &INSTR_CB87,
+    &INSTR_CB88,
+    &INSTR_CB89,
+    &INSTR_CB8A,
+    &INSTR_CB8B,
+    &INSTR_CB8C,
+    &INSTR_CB8D,
+    &INSTR_CB8E,
+    &INSTR_CB8F,
+    &INSTR_CB90,
+    &INSTR_CB91,
+    &INSTR_CB92,
+    &INSTR_CB93,
+    &INSTR_CB94,
+    &INSTR_CB95,
+    &INSTR_CB96,
+    &INSTR_CB97,
+    &INSTR_CB98,
+    &INSTR_CB99,
+    &INSTR_CB9A,
+    &INSTR_CB9B,
+    &INSTR_CB9C,
+    &INSTR_CB9D,
+    &INSTR_CB9E,
+    &INSTR_CB9F,
+    &INSTR_CBA0,
+    &INSTR_CBA1,
+    &INSTR_CBA2,
+    &INSTR_CBA3,
+    &INSTR_CBA4,
+    &INSTR_CBA5,
+    &INSTR_CBA6,
+    &INSTR_CBA7,
+    &INSTR_CBA8,
+    &INSTR_CBA9,
+    &INSTR_CBAA,
+    &INSTR_CBAB,
+    &INSTR_CBAC,
+    &INSTR_CBAD,
+    &INSTR_CBAE,
+    &INSTR_CBAF,
+    &INSTR_CBB0,
+    &INSTR_CBB1,
+    &INSTR_CBB2,
+    &INSTR_CBB3,
+    &INSTR_CBB4,
+    &INSTR_CBB5,
+    &INSTR_CBB6,
+    &INSTR_CBB7,
+    &INSTR_CBB8,
+    &INSTR_CBB9,
+    &INSTR_CBBA,
+    &INSTR_CBBB,
+    &INSTR_CBBC,
+    &INSTR_CBBD,
+    &INSTR_CBBE,
+    &INSTR_CBBF,
     &INSTR_INVALID, // C0
     &INSTR_INVALID,
     &INSTR_INVALID,
@@ -857,9 +1038,13 @@ Instruction const * Decode8BitInstruction(u8 opcode)
 Instruction const * DecodeInstruction(u16 opcode)
 {
     if ((opcode & 0x00FF) == 0x00CB) {
-        return Decode16BitInstruction(opcode >> 8);
+        auto ret = Decode16BitInstruction(opcode >> 8);
+        return ret;
+        // return Decode16BitInstruction(opcode >> 8);
     } else {
-        return Decode8BitInstruction(opcode & 0xFF);
+        auto ret = Decode8BitInstruction(opcode & 0xFF);
+        return ret;
+        // return Decode8BitInstruction(opcode & 0xFF);
     }
 }
 }

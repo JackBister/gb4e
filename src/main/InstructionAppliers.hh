@@ -5,6 +5,45 @@
 
 namespace gb4e
 {
+
+template <RegisterName SRC>
+InstructionResult Adc(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr dst(RegisterName::A);
+    Register constexpr src(SRC);
+    u8 srcValue;
+    if constexpr (src.Is16Bit()) {
+        static_assert(SRC == RegisterName::HL);
+        u16 hl = state->Get16BitRegisterValue(src);
+        srcValue = memory->Read(hl);
+    } else {
+        srcValue = state->Get8BitRegisterValue(src);
+    }
+
+    u8 prevFlags = state->GetFlags();
+    u8 prevValue = state->Get8BitRegisterValue(dst);
+    u8 carry = (prevFlags & FLAG_C) ? 1 : 0;
+
+    u16 newValue = prevValue + srcValue + carry;
+
+    u8 newFlags = 0;
+    if (((u8)newValue) == 0) {
+        newFlags |= FLAG_ZERO;
+    }
+
+    if (((u8)prevValue ^ srcValue ^ newValue) & BIT(4)) { // What the fuck?
+        newFlags |= FLAG_HC;
+    }
+
+    if (newValue & BIT(8)) {
+        newFlags |= FLAG_C;
+    }
+
+    return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(dst, prevValue, (u8)newValue), 1, 2);
+}
+
+InstructionResult AdcD8(GbCpuState const * state, MemoryState const * memory);
+
 template <RegisterName DST, RegisterName SRC>
 InstructionResult Add(GbCpuState const * state, MemoryState const * memory)
 {
@@ -98,6 +137,8 @@ InstructionResult And(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
 }
 
+InstructionResult AndD8(GbCpuState const * state, MemoryState const * memory);
+
 template <u8 BIT, RegisterName regName>
 InstructionResult Bit(GbCpuState const * state, MemoryState const * memory)
 {
@@ -138,6 +179,8 @@ InstructionResult CpFromMem(GbCpuState const * state, MemoryState const * memory
     }
     return InstructionResult(FlagSet(prevFlags, flags), 1, 2);
 }
+
+InstructionResult Cpl(GbCpuState const * state, MemoryState const * memory);
 
 template <RegisterName REG>
 InstructionResult Dec(GbCpuState const * state, MemoryState const * memory)
@@ -189,7 +232,11 @@ InstructionResult Inc(GbCpuState const * state, MemoryState const * memory)
     }
 }
 
+InstructionResult IncHlAddr(GbCpuState const * state, MemoryState const * memory);
+
 InstructionResult JpA16(GbCpuState const * state, MemoryState const * memory);
+
+InstructionResult JpHl(GbCpuState const * state, MemoryState const * memory);
 
 template <u8 FLAGMASK>
 InstructionResult JrFlagS8(GbCpuState const * state, MemoryState const * memory)
@@ -297,7 +344,7 @@ InstructionResult LdD16(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(RegisterWrite(dstReg, dstPrevValue, imm), 3, 3);
 }
 
-template <RegisterName DST, RegisterName ADDR>
+template <RegisterName DST, RegisterName ADDR, int MODIFY = 0>
 InstructionResult LdFromAddrReg(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr dstReg(DST);
@@ -308,6 +355,14 @@ InstructionResult LdFromAddrReg(GbCpuState const * state, MemoryState const * me
     u8 prevValue = state->Get8BitRegisterValue(dstReg);
     u16 addrValue = state->Get16BitRegisterValue(addrReg);
     u8 valueAtAddr = memory->Read(addrValue);
+
+    if constexpr (MODIFY != 0) {
+        static_assert(ADDR == RegisterName::HL);
+        return InstructionResult(
+            {RegisterWrite(addrReg, addrValue, addrValue + MODIFY), RegisterWrite(dstReg, prevValue, valueAtAddr)},
+            1,
+            2);
+    }
     return InstructionResult(RegisterWrite(dstReg, prevValue, valueAtAddr), 1, 2);
 }
 
@@ -343,6 +398,8 @@ InstructionResult LdFromA16(GbCpuState const * state, MemoryState const * memory
     u8 newValue = memory->Read(addr);
     return InstructionResult(RegisterWrite(dstReg, prevValue, newValue), 3, 4);
 }
+
+InstructionResult LdHlD8(GbCpuState const * state, MemoryState const * memory);
 
 template <s8 MODIFIER>
 InstructionResult LdHlIncDecA(GbCpuState const * state, MemoryState const * memory)
@@ -439,7 +496,55 @@ InstructionResult Push(GbCpuState const * state, MemoryState const * memory)
                              4);
 }
 
+template <u8 B, RegisterName REG>
+InstructionResult Res(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr reg(REG);
+
+    u8 mask = ~((u8)BIT(B));
+
+    if constexpr (reg.Is16Bit()) {
+        static_assert(REG == RegisterName::HL);
+        u16 hl = state->Get16BitRegisterValue(reg);
+        u8 prevValue = memory->Read(hl);
+        u8 newValue = prevValue & mask;
+        return InstructionResult(MemoryWrite(hl, prevValue, newValue), 2, 4);
+    } else {
+        u8 prevValue = state->Get8BitRegisterValue(reg);
+        u8 newValue = prevValue & mask;
+        return InstructionResult(RegisterWrite(reg, prevValue, newValue), 2, 2);
+    }
+}
+
 InstructionResult Ret(GbCpuState const * state, MemoryState const * memory);
+
+InstructionResult Reti(GbCpuState const * state, MemoryState const * memory);
+
+template <u8 FLAGMASK>
+InstructionResult RetFlag(GbCpuState const * state, MemoryState const * memory)
+{
+    u8 flags = state->GetFlags();
+    if (flags & FLAGMASK) {
+        Register constexpr pc(RegisterName::PC);
+        Register constexpr sp(RegisterName::SP);
+
+        u16 prevSpAddr = state->Get16BitRegisterValue(sp);
+        assert(prevSpAddr < 0xFFFF);
+        u8 pcLo = memory->Read(prevSpAddr);
+        u8 pcHi = memory->Read(prevSpAddr + 1);
+
+        u16 prevPcValue = state->Get16BitRegisterValue(pc);
+        u16 newPcValue = ((u16)pcLo) | (((u16)pcHi) << 8);
+
+        return InstructionResult(
+            // TODO: See CallA16 for why consumedBytes is 0
+            {RegisterWrite(sp, prevSpAddr, prevSpAddr + 2), RegisterWrite(pc, prevPcValue, newPcValue)},
+            0,
+            5);
+    } else {
+        return InstructionResult(1, 2);
+    }
+}
 
 template <u8 FLAGMASK>
 InstructionResult RetNFlag(GbCpuState const * state, MemoryState const * memory)
@@ -487,6 +592,33 @@ InstructionResult Rl(GbCpuState const * state, MemoryState const * memory)
 
 InstructionResult Rla(GbCpuState const * state, MemoryState const * memory);
 
+InstructionResult Rlca(GbCpuState const * state, MemoryState const * memory);
+
+template <u8 IDX>
+InstructionResult Rst(GbCpuState const * state, MemoryState const * memory)
+{
+    static_assert(IDX < 8);
+
+    Register constexpr pc(RegisterName::PC);
+    Register constexpr sp(RegisterName::SP);
+
+    u16 prevSpAddr = state->Get16BitRegisterValue(sp);
+    u8 prevHi = memory->Read(prevSpAddr - 1);
+    u8 prevLo = memory->Read(prevSpAddr - 2);
+
+    u16 prevPc = state->Get16BitRegisterValue(pc);
+    u16 srcValue = prevPc + 1;
+    u8 newHi = (srcValue >> 8) & 0xFF;
+    u8 newLo = srcValue & 0xFF;
+
+    u16 newPc = IDX * 8;
+
+    return InstructionResult({MemoryWrite(prevSpAddr - 1, prevHi, newHi), MemoryWrite(prevSpAddr - 2, prevLo, newLo)},
+                             {RegisterWrite(sp, prevSpAddr, prevSpAddr - 2), RegisterWrite(pc, prevPc, newPc)},
+                             0,
+                             4);
+}
+
 template <RegisterName SRC>
 InstructionResult Sub(GbCpuState const * state, MemoryState const * memory)
 {
@@ -512,22 +644,75 @@ InstructionResult Sub(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
 }
 
+template <RegisterName REG>
+InstructionResult Swap(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr reg(REG);
+    if constexpr (reg.Is16Bit()) {
+        static_assert(REG == RegisterName::HL);
+
+        u16 hl = state->Get16BitRegisterValue(reg);
+
+        u8 prevValue = memory->Read(hl);
+        u8 newValue = prevValue << 4 | prevValue >> 4;
+
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = 0;
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+
+        return InstructionResult(FlagSet(prevFlags, newFlags), MemoryWrite(hl, prevValue, newValue), 2, 4);
+    } else {
+        u8 prevValue = state->Get8BitRegisterValue(reg);
+        u8 newValue = prevValue << 4 | prevValue >> 4;
+
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = 0;
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(reg, prevValue, newValue), 2, 2);
+    }
+}
+
+template <bool ENABLED>
+InstructionResult ToggleInterrupts(GbCpuState const * state, MemoryState const * memory)
+{
+    return InstructionResult(InterruptSet(state->GetInterruptMasterEnable(), ENABLED, ENABLED), 1, 1);
+}
+
 template <RegisterName SRC>
 InstructionResult Xor(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr srcReg(SRC);
-    static_assert(srcReg.Is8Bit());
     Register constexpr dstReg(RegisterName::A);
 
-    u8 prevValue = state->Get8BitRegisterValue(dstReg);
-    u8 xorV = state->Get8BitRegisterValue(srcReg);
-    u8 newValue = prevValue ^ xorV;
+    if constexpr (srcReg.Is16Bit()) {
+        static_assert(SRC == RegisterName::HL);
+        u16 hl = state->Get16BitRegisterValue(srcReg);
 
-    u8 prevFlags = state->GetFlags();
-    u8 flags = 0;
-    if (newValue == 0) {
-        flags |= FLAG_ZERO;
+        u8 prevValue = state->Get8BitRegisterValue(dstReg);
+        u8 xorV = memory->Read(hl);
+        u8 newValue = prevValue ^ xorV;
+
+        u8 prevFlags = state->GetFlags();
+        u8 flags = 0;
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 2);
+    } else {
+        u8 prevValue = state->Get8BitRegisterValue(dstReg);
+        u8 xorV = state->Get8BitRegisterValue(srcReg);
+        u8 newValue = prevValue ^ xorV;
+
+        u8 prevFlags = state->GetFlags();
+        u8 flags = 0;
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     }
-    return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
 }
 };

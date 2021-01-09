@@ -8,6 +8,7 @@ extern u64 cycleTimeNs;
 extern u64 instructionTimeNs;
 extern u64 applyTimeNs;
 extern u64 applyFlagsTimeNs;
+extern u64 applyInterruptsTimeNs;
 extern u64 applyMemoryTimeNs;
 extern u64 applyRegistersTimeNs;
 extern u64 applyPcTimeNs;
