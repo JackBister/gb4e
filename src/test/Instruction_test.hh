@@ -2061,6 +2061,130 @@ TEST Instr_IncHlAddr()
     PASS();
 }
 
+TEST Instr_JpFlagA16_Jump()
+{
+    using namespace gb4e;
+    auto applier = JpFlagA16<0b10000000>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.SetFlags(FLAG_ZERO);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xCA);
+    memory.Write(0x101, 0xEF);
+    memory.Write(0x102, 0xBE);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT_FALSE(result.GetFlagSet().has_value());
+    ASSERT_FALSE(result.GetInterruptSet().has_value());
+    ASSERT(result.GetMemoryWrites().empty());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0x100, regWrite.GetWordPreviousValue());
+    ASSERT_EQ(0xBEEF, regWrite.GetWordValue());
+    ASSERT_EQ(0, result.GetConsumedBytes());
+    ASSERT_EQ(4, result.GetConsumedCycles());
+
+    PASS();
+}
+
+TEST Instr_JpFlagA16_NoJump()
+{
+    using namespace gb4e;
+    auto applier = JpFlagA16<0b10000000>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.SetFlags(0);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xCA);
+    memory.Write(0x101, 0xEF);
+    memory.Write(0x102, 0xBE);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT_FALSE(result.GetFlagSet().has_value());
+    ASSERT_FALSE(result.GetInterruptSet().has_value());
+    ASSERT(result.GetMemoryWrites().empty());
+    ASSERT(result.GetRegisterWrites().empty());
+    ASSERT_EQ(3, result.GetConsumedBytes());
+    ASSERT_EQ(3, result.GetConsumedCycles());
+    PASS();
+}
+
+TEST Instr_JpNFlagA16_Jump()
+{
+    using namespace gb4e;
+    auto applier = JpNFlagA16<0b10000000>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.SetFlags(0);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xCA);
+    memory.Write(0x101, 0xEF);
+    memory.Write(0x102, 0xBE);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT_FALSE(result.GetFlagSet().has_value());
+    ASSERT_FALSE(result.GetInterruptSet().has_value());
+    ASSERT(result.GetMemoryWrites().empty());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::PC, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0x100, regWrite.GetWordPreviousValue());
+    ASSERT_EQ(0xBEEF, regWrite.GetWordValue());
+    ASSERT_EQ(0, result.GetConsumedBytes());
+    ASSERT_EQ(4, result.GetConsumedCycles());
+    PASS();
+}
+
+TEST Instr_JpNFlagA16_NoJump()
+{
+    using namespace gb4e;
+    auto applier = JpNFlagA16<0b10000000>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.SetFlags(FLAG_ZERO);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xCA);
+    memory.Write(0x101, 0xEF);
+    memory.Write(0x102, 0xBE);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT_FALSE(result.GetFlagSet().has_value());
+    ASSERT_FALSE(result.GetInterruptSet().has_value());
+    ASSERT(result.GetMemoryWrites().empty());
+    ASSERT(result.GetRegisterWrites().empty());
+    ASSERT_EQ(3, result.GetConsumedBytes());
+    ASSERT_EQ(3, result.GetConsumedCycles());
+    PASS();
+}
+
+TEST Instr_DecHlAddr()
+{
+    using namespace gb4e;
+    auto applier = DecHlAddr;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set16BitRegisterValue(Register(RegisterName::HL), 0x100);
+    memory.Write(0x100, 1);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    ASSERT_FALSE(result.GetInterruptSet().has_value());
+    ASSERT_EQ(1, result.GetMemoryWrites().size());
+    auto memWrite = result.GetMemoryWrites()[0];
+    ASSERT_EQ(0x100, memWrite.GetLocation());
+    ASSERT_EQ(0, memWrite.GetValue());
+    ASSERT(result.GetRegisterWrites().empty());
+    ASSERT_EQ(1, result.GetConsumedBytes());
+    ASSERT_EQ(3, result.GetConsumedCycles());
+    PASS();
+}
+
 SUITE(Instruction_test)
 {
     RUN_TEST(Instr_Ld_B_A);
@@ -2145,4 +2269,9 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_Res_B);
     RUN_TEST(Instr_Res_HL);
     RUN_TEST(Instr_IncHlAddr);
+    RUN_TEST(Instr_JpFlagA16_Jump);
+    RUN_TEST(Instr_JpFlagA16_NoJump);
+    RUN_TEST(Instr_JpNFlagA16_Jump);
+    RUN_TEST(Instr_JpNFlagA16_NoJump);
+    RUN_TEST(Instr_DecHlAddr);
 }

@@ -197,6 +197,9 @@ InstructionResult Dec(GbCpuState const * state, MemoryState const * memory)
         if (newValue == 0) {
             flags |= FLAG_ZERO;
         }
+        if (newValue == 0b00001111) {
+            flags |= FLAG_HC;
+        }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(reg, prevValue, newValue), 1, 1);
     } else {
         u16 prevValue = state->Get16BitRegisterValue(reg);
@@ -205,6 +208,8 @@ InstructionResult Dec(GbCpuState const * state, MemoryState const * memory)
         return InstructionResult(RegisterWrite(reg, prevValue, newValue), 1, 2);
     }
 }
+
+InstructionResult DecHlAddr(GbCpuState const * state, MemoryState const * memory);
 
 template <RegisterName REG>
 InstructionResult Inc(GbCpuState const * state, MemoryState const * memory)
@@ -235,6 +240,38 @@ InstructionResult Inc(GbCpuState const * state, MemoryState const * memory)
 InstructionResult IncHlAddr(GbCpuState const * state, MemoryState const * memory);
 
 InstructionResult JpA16(GbCpuState const * state, MemoryState const * memory);
+
+template <u8 FLAGMASK>
+InstructionResult JpFlagA16(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr pc(RegisterName::PC);
+
+    u8 flags = state->GetFlags();
+    if (flags & FLAGMASK) {
+        u16 pcPrevValue = state->Get16BitRegisterValue(pc);
+        assert(pcPrevValue < 0xFFFE);
+        u16 pcNewValue = memory->Read16(pcPrevValue + 1);
+        return InstructionResult(RegisterWrite(pc, pcPrevValue, pcNewValue), 0, 4);
+    } else {
+        return InstructionResult(3, 3);
+    }
+}
+
+template <u8 FLAGMASK>
+InstructionResult JpNFlagA16(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr pc(RegisterName::PC);
+
+    u8 flags = state->GetFlags();
+    if (!(flags & FLAGMASK)) {
+        u16 pcPrevValue = state->Get16BitRegisterValue(pc);
+        assert(pcPrevValue < 0xFFFE);
+        u16 pcNewValue = memory->Read16(pcPrevValue + 1);
+        return InstructionResult(RegisterWrite(pc, pcPrevValue, pcNewValue), 0, 4);
+    } else {
+        return InstructionResult(3, 3);
+    }
+}
 
 InstructionResult JpHl(GbCpuState const * state, MemoryState const * memory);
 

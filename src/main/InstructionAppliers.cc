@@ -117,6 +117,25 @@ InstructionResult Cpl(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(a, prevValue, newValue), 1, 1);
 }
 
+InstructionResult DecHlAddr(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr reg(RegisterName::HL);
+    u16 hl = state->Get16BitRegisterValue(reg);
+    u8 prevValue = memory->Read(hl);
+    u8 newValue = prevValue - 1;
+    u8 prevFlags = state->GetFlags();
+    u8 flags = 0;
+    flags |= prevFlags & FLAG_C; // Keep carry flag
+    flags |= FLAG_N;             // Always set sub flag
+    if (newValue == 0) {
+        flags |= FLAG_ZERO;
+    }
+    if (newValue == 0b00001111) {
+        flags |= FLAG_HC;
+    }
+    return InstructionResult(FlagSet(prevFlags, flags), MemoryWrite(hl, prevValue, newValue), 1, 3);
+}
+
 InstructionResult IncHlAddr(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr reg(RegisterName::HL);

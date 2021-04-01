@@ -66,7 +66,7 @@ Instruction const INSTR_31(0x31, 0x3100, "LD SP, d16", 3, 3, LdD16<RegisterName:
 Instruction const INSTR_32(0x32, 0x3200, "LD (HL-), A", 1, 2, LdHlIncDecA<-1>);
 Instruction const INSTR_33(0x33, 0x3300, "INC SP", 1, 2, Inc<RegisterName::SP>);
 Instruction const INSTR_34(0x34, 0x3400, "INC (HL)", 1, 3, IncHlAddr);
-// 35
+Instruction const INSTR_35(0x35, 0x3500, "DEC (HL)", 1, 3, DecHlAddr);
 Instruction const INSTR_36(0x36, 0x3600, "LD (HL), d8", 2, 3, LdHlD8);
 // 37
 Instruction const INSTR_38(0x38, 0x3800, "JR C, s8", 2, 2, JrFlagS8<0b0001>);
@@ -207,7 +207,7 @@ Instruction const INSTR_BE(0xBE, 0xBE00, "CP (HL)", 1, 2, CpFromMem<RegisterName
 
 Instruction const INSTR_C0(0xC0, 0xC000, "RET NZ", 1, 2, RetNFlag<0b10000000>); // TODO: Conditional 5 cycles
 Instruction const INSTR_C1(0xC1, 0xC100, "POP BC", 1, 3, Pop<RegisterName::BC>);
-// C2
+Instruction const INSTR_C2(0xC2, 0xC200, "JP NZ, a16", 3, 3, JpNFlagA16<0b10000000>);
 Instruction const INSTR_C3(0xC3, 0xC300, "JP a16", 3, 4, JpA16);
 // C4
 Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push<RegisterName::BC>);
@@ -215,7 +215,7 @@ Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push<RegisterName::BC>
 Instruction const INSTR_C7(0xC7, 0xC700, "RST 0", 1, 4, Rst<0>);
 Instruction const INSTR_C8(0xC8, 0xC800, "RET Z", 1, 2, RetFlag<0b10000000>);
 Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret);
-// CA
+Instruction const INSTR_CA(0xCA, 0xCA00, "JP Z, a16", 3, 3, JpFlagA16<0b10000000>);
 Instruction const INSTR_CB(0xCB, 0xCB00, "INVALID CB", 1, 1, APPLIER_NOP);
 // CC
 Instruction const INSTR_CD(0xCD, 0xCD00, "CALL a16", 3, 6, CallA16);
@@ -224,7 +224,7 @@ Instruction const INSTR_CF(0xCF, 0xCF00, "RST 1", 1, 4, Rst<1>);
 
 Instruction const INSTR_D0(0xD0, 0xD000, "RET NC", 1, 2, RetNFlag<0b00010000>);
 Instruction const INSTR_D1(0xD1, 0xD100, "POP DE", 1, 3, Pop<RegisterName::DE>);
-// D2
+Instruction const INSTR_D2(0xD2, 0xD200, "JP NC, a16", 3, 3, JpNFlagA16<0b00010000>);
 Instruction const INSTR_D3(0xD3, 0xD300, "INVALID D3", 1, 1, APPLIER_NOP);
 // D4
 Instruction const INSTR_D5(0xD5, 0xD500, "PUSH DE", 1, 4, Push<RegisterName::DE>);
@@ -232,7 +232,7 @@ Instruction const INSTR_D5(0xD5, 0xD500, "PUSH DE", 1, 4, Push<RegisterName::DE>
 Instruction const INSTR_D7(0xD7, 0xD700, "RST 2", 1, 4, Rst<2>);
 Instruction const INSTR_D8(0xD8, 0xD800, "RET C", 1, 2, RetFlag<0b00010000>);
 Instruction const INSTR_D9(0xD9, 0xD900, "RETI", 1, 4, Reti);
-// DA
+Instruction const INSTR_DA(0xDA, 0xDA00, "JP C, a16", 3, 3, JpFlagA16<0b00010000>);
 Instruction const INSTR_DB(0xDB, 0xDB00, "INVALID DB", 1, 1, APPLIER_NOP);
 // DC
 Instruction const INSTR_DD(0xDD, 0xDD00, "INVALID DD", 1, 1, APPLIER_NOP);
@@ -561,7 +561,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_32,
     &INSTR_33,
     &INSTR_34,
-    &INSTR_INVALID, //35
+    &INSTR_35, //35
     &INSTR_36,
     &INSTR_INVALID,
     &INSTR_38,
@@ -702,7 +702,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_INVALID, //BF
     &INSTR_C0, //C0
     &INSTR_C1,
-    &INSTR_INVALID,
+    &INSTR_C2,
     &INSTR_C3,
     &INSTR_INVALID,
     &INSTR_C5, //C5
@@ -710,7 +710,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_C7,
     &INSTR_C8,
     &INSTR_C9,
-    &INSTR_INVALID, //CA
+    &INSTR_CA, //CA
     &INSTR_CB,
     &INSTR_INVALID,
     &INSTR_CD,
@@ -718,7 +718,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_CF, //CF
     &INSTR_D0, //D0
     &INSTR_D1,
-    &INSTR_INVALID,
+    &INSTR_D2,
     &INSTR_D3,
     &INSTR_INVALID,
     &INSTR_D5, //D5
@@ -726,7 +726,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_D7,
     &INSTR_D8,
     &INSTR_D9,
-    &INSTR_INVALID, //DA
+    &INSTR_DA, //DA
     &INSTR_DB,
     &INSTR_INVALID,
     &INSTR_DD,
