@@ -6,7 +6,6 @@
 
 #include "Common.hh"
 #include "InstructionResult.hh"
-#include "MemoryHandlers.hh"
 #include "MemoryState.hh"
 
 namespace gb4e
@@ -31,10 +30,7 @@ public:
     u16 Get16BitRegisterValue(Register const reg) const;
 
     std::optional<u8> ReadMemory(u16 location) const;
-    /*
-    u8 Get8BitMemoryValue(u16 location) const;
-    u16 Get16BitMemoryValue(u16 location) const;
-    */
+
     u8 GetFlags() const;
     u8 GetInterruptEnable() const { return interruptEnable; }
     bool GetInterruptFlags() const { return interruptFlags; }
@@ -70,8 +66,6 @@ private:
 
     // FFFF
     u8 interruptEnable = 0;
-
-    std::unordered_map<u16, MemoryWriteHandler> memoryWriteHandlers;
 
     size_t bootromSize;
     u8 const * bootrom;

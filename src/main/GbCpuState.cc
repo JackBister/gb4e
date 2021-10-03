@@ -138,17 +138,7 @@ bool GbCpuState::WriteMemory(u16 location, u8 value)
         interruptEnable = value;
         return true;
     }
-    if (memoryWriteHandlers.find(location) != memoryWriteHandlers.end()) {
-        bool allowWrite = memoryWriteHandlers.at(location)(this, location, value);
-        if (allowWrite) {
-            memory[location] = value;
-        } else {
-            logger->Infof(
-                "Attempt to write value=%02x to location=%04x was prevented by memory write handler", value, location);
-        }
-    } else {
-        memory[location] = value;
-    }
+    memory[location] = value;
     return true;
 }
 
