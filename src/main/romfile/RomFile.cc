@@ -174,6 +174,7 @@ std::optional<RomFile> RomFile::Create(size_t size, std::unique_ptr<u8[]> && dat
     for (size_t i = 0; i < TITLE_LENGTH; ++i) {
         if (data[TITLE_START_OFFSET + i] == '\0') {
             titleLength = i;
+            break;
         }
     }
     std::string title(titleStart, titleLength);
@@ -186,7 +187,14 @@ std::optional<RomFile> RomFile::Create(size_t size, std::unique_ptr<u8[]> && dat
     }
 
     char const * manufacturerCodeStart = (char const *)&data[MANUFACTURER_CODE_START_OFFSET];
-    std::string manufacturerCode(manufacturerCodeStart, MANUFACTURER_CODE_LENGTH);
+    size_t manufacturerCodeLength = 0;
+    for (size_t i = 0; i < MANUFACTURER_CODE_LENGTH; ++i) {
+        if (data[MANUFACTURER_CODE_START_OFFSET + i] == '\0') {
+            manufacturerCodeLength = i;
+            break;
+        }
+    }
+    std::string manufacturerCode(manufacturerCodeStart, manufacturerCodeLength);
 
     u8 cgbFlagByte = data[CGB_FLAG_OFFET];
     CgbFlag cgbFlag = ToCgbFlag(cgbFlagByte);

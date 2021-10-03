@@ -90,7 +90,7 @@ int main(int argc, char ** argv)
     }
     gb4e::RomFile romFile = std::move(romFileOpt.value());
 
-    logger->Infof("%s", romFileOpt.value().ToString().c_str());
+    logger->Infof("%s", romFile.ToString().c_str());
 
     std::optional<gb4e::GbCpu> gbCpuOpt =
         gb4e::GbCpu::Create(bootrom.value().size, bootrom.value().arr.get(), gb4e::GbModel::DMG, &gbRenderer);
