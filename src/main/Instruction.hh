@@ -45,7 +45,7 @@ private:
 };
 
 /**
- * For single-byte instructions, the first byte (mask 0xF0) should be filled
+ * For single-byte instructions, the first byte (mask 0xFF00) should be filled
  */
 Instruction const * DecodeInstruction(u16 opcode);
 };

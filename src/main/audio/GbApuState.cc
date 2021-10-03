@@ -444,8 +444,6 @@ bool AudioPimpl::WriteMemory(const u16 addr, const u8 val)
     /* Find sound channel corresponding to register address. */
     u8 i = (addr - 0xFF10) / 5;
 
-    logger->Infof("Write addr=%04x, val=%02x", addr, val);
-
     LockAudioDevice();
     bool result = false;
     switch (addr) {

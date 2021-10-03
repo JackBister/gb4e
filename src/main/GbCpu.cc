@@ -105,8 +105,6 @@ void GbCpu::TickCycle()
             state->Set16BitRegisterValue(pcReg, interruptHandlerAddress);
             state->SetInterruptMasterEnable(false);
             memoryState->Write(0xFF0F, iflags ^ (1 << interruptId));
-            logger->Infof(
-                "iflags %02x %02x %d %02x", iflags, 1 << interruptId, interruptId, iflags ^ (1 << interruptId));
             interruptRoutineCycle = 0xFF;
             waitCycles = 0;
         } else {
