@@ -659,6 +659,28 @@ InstructionResult Rst(GbCpuState const * state, MemoryState const * memory)
 }
 
 template <RegisterName SRC>
+InstructionResult Sla(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr srcReg(SRC);
+    static_assert(srcReg.Is8Bit());
+
+    u8 prevValue = state->Get8BitRegisterValue(srcReg);
+    u8 newValue = prevValue << 1;
+
+    u8 prevFlags = state->GetFlags();
+    u8 newFlags = 0;
+    if (newValue == 0) {
+        newFlags |= FLAG_ZERO;
+    }
+
+    if (prevValue & BIT(7)) {
+        newFlags |= FLAG_C;
+    }
+
+    return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(srcReg, prevValue, newValue), 2, 2);
+}
+
+template <RegisterName SRC>
 InstructionResult Sub(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr srcReg(SRC);

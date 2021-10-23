@@ -281,6 +281,15 @@ Instruction const INSTR_CB15(0xCB, 0xCB15, "RL L", 2, 2, Rl<RegisterName::L>);
 // CB16
 Instruction const INSTR_CB17(0xCB, 0xCB17, "RL A", 2, 2, Rl<RegisterName::A>);
 
+Instruction const INSTR_CB20(0xCB, 0xCB20, "SLA B", 2, 2, Sla<RegisterName::B>);
+Instruction const INSTR_CB21(0xCB, 0xCB21, "SLA C", 2, 2, Sla<RegisterName::C>);
+Instruction const INSTR_CB22(0xCB, 0xCB22, "SLA D", 2, 2, Sla<RegisterName::D>);
+Instruction const INSTR_CB23(0xCB, 0xCB23, "SLA E", 2, 2, Sla<RegisterName::E>);
+Instruction const INSTR_CB24(0xCB, 0xCB24, "SLA H", 2, 2, Sla<RegisterName::H>);
+Instruction const INSTR_CB25(0xCB, 0xCB25, "SLA L", 2, 2, Sla<RegisterName::L>);
+// CB26
+Instruction const INSTR_CB27(0xCB, 0xCB27, "SLA A", 2, 2, Sla<RegisterName::A>);
+
 Instruction const INSTR_CB30(0xCB, 0xCB30, "SWAP B", 2, 2, Swap<RegisterName::B>);
 Instruction const INSTR_CB31(0xCB, 0xCB31, "SWAP C", 2, 2, Swap<RegisterName::C>);
 Instruction const INSTR_CB32(0xCB, 0xCB32, "SWAP D", 2, 2, Swap<RegisterName::D>);
@@ -798,14 +807,14 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // 1F
-    &INSTR_INVALID, // 20
+    &INSTR_CB20, // 20
+    &INSTR_CB21,
+    &INSTR_CB22,
+    &INSTR_CB23,
+    &INSTR_CB24,
+    &INSTR_CB25, // 25
     &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, // 25
-    &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_CB27,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // 2A
