@@ -2185,6 +2185,86 @@ TEST Instr_DecHlAddr()
     PASS();
 }
 
+TEST Instr_Daa_0()
+{
+    using namespace gb4e;
+    auto applier = Daa;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(FLAG_ZERO, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(0, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_Daa_1()
+{
+    using namespace gb4e;
+    auto applier = Daa;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0x01);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(0, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(0x01, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_Daa_10()
+{
+    using namespace gb4e;
+    auto applier = Daa;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0x0A);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(0, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(0b00010000, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_Daa_12()
+{
+    using namespace gb4e;
+    auto applier = Daa;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0x0C);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(0, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(0b00010010, regWrite.GetByteValue());
+    PASS();
+}
+
 SUITE(Instruction_test)
 {
     RUN_TEST(Instr_Ld_B_A);
@@ -2274,4 +2354,8 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_JpNFlagA16_Jump);
     RUN_TEST(Instr_JpNFlagA16_NoJump);
     RUN_TEST(Instr_DecHlAddr);
+    RUN_TEST(Instr_Daa_0);
+    RUN_TEST(Instr_Daa_1);
+    RUN_TEST(Instr_Daa_10);
+    RUN_TEST(Instr_Daa_12);
 }

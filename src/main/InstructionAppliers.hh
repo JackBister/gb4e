@@ -182,6 +182,8 @@ InstructionResult CpFromMem(GbCpuState const * state, MemoryState const * memory
 
 InstructionResult Cpl(GbCpuState const * state, MemoryState const * memory);
 
+InstructionResult Daa(GbCpuState const * state, MemoryState const * memory);
+
 template <RegisterName REG>
 InstructionResult Dec(GbCpuState const * state, MemoryState const * memory)
 {

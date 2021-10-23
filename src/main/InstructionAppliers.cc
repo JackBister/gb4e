@@ -117,6 +117,40 @@ InstructionResult Cpl(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(a, prevValue, newValue), 1, 1);
 }
 
+InstructionResult Daa(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr a(RegisterName::A);
+    u8 prevFlags = state->GetFlags();
+    u8 prevValue = state->Get8BitRegisterValue(a);
+    u8 newValue = prevValue;
+
+    u8 lo = prevValue & 0x0F;
+    u8 hi = prevValue & 0xF0;
+
+    u8 correction = 0;
+    u8 cFlag = 0;
+    if ((prevFlags & FLAG_HC) || (lo > 9)) {
+        correction = 0x06;
+    }
+
+    if ((prevFlags & FLAG_C) || (hi > 9)) {
+        correction += 0x60;
+        cFlag |= FLAG_C;
+    }
+
+    if (prevFlags & FLAG_N) {
+        newValue -= correction;
+    } else {
+        newValue += correction;
+    }
+
+    u8 newFlags = 0;
+    newFlags |= (newValue == 0) ? FLAG_ZERO : 0;
+    newFlags |= (prevFlags & FLAG_N);
+    newFlags |= cFlag;
+    return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(a, prevValue, newValue), 1, 1);
+}
+
 InstructionResult DecHlAddr(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr reg(RegisterName::HL);

@@ -51,7 +51,7 @@ Instruction const INSTR_23(0x23, 0x2300, "INC HL", 1, 2, Inc<RegisterName::HL>);
 Instruction const INSTR_24(0x24, 0x2400, "INC H", 1, 1, Inc<RegisterName::H>);
 Instruction const INSTR_25(0x25, 0x2500, "DEC H", 1, 1, Dec<RegisterName::H>);
 Instruction const INSTR_26(0x26, 0x2600, "LD H, d8", 2, 2, LdD8<RegisterName::H>);
-// 27
+Instruction const INSTR_27(0x27, 0x2700, "DAA", 1, 1, Daa);
 Instruction const INSTR_28(0x28, 0x2800, "JR Z, s8", 2, 2, JrFlagS8<0b10000000>); // TODO: Conditional 3 cycles
 Instruction const INSTR_29(0x29, 0x2900, "ADD HL, HL", 1, 2, Add<RegisterName::HL, RegisterName::HL>);
 Instruction const INSTR_2A(0x2A, 0x2A00, "LD A, (HL+)", 1, 2, LdFromAddrReg<RegisterName::A, RegisterName::HL, 1>);
@@ -547,7 +547,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_24,
     &INSTR_25, //25
     &INSTR_26,
-    &INSTR_INVALID,
+    &INSTR_27,
     &INSTR_28,
     &INSTR_29,
     &INSTR_2A, //2A
