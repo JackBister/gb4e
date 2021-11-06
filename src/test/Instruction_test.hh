@@ -2332,6 +2332,54 @@ TEST Instr_Sla_Carry()
     PASS();
 }
 
+TEST Instr_AddD8_0()
+{
+    using namespace gb4e;
+    auto applier = AddD8<RegisterName::A>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xC6);
+    memory.Write(0x101, 0);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(FLAG_ZERO, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_AddD8_1()
+{
+    using namespace gb4e;
+    auto applier = AddD8<RegisterName::A>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xC6);
+    memory.Write(0x101, 1);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(0, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(1, regWrite.GetByteValue());
+    PASS();
+}
+
 SUITE(Instruction_test)
 {
     RUN_TEST(Instr_Ld_B_A);
@@ -2428,4 +2476,6 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_Sla_0);
     RUN_TEST(Instr_Sla_1);
     RUN_TEST(Instr_Sla_Carry);
+    RUN_TEST(Instr_AddD8_0);
+    RUN_TEST(Instr_AddD8_1);
 }

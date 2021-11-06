@@ -91,6 +91,35 @@ InstructionResult Add(GbCpuState const * state, MemoryState const * memory)
     }
 }
 
+template <RegisterName DST>
+InstructionResult AddD8(GbCpuState const * state, MemoryState const * memory)
+{
+    static_assert(DST == RegisterName::A);
+    Register constexpr dstReg(DST);
+    Register constexpr pc(RegisterName::PC);
+
+    u16 pcAddr = state->Get16BitRegisterValue(pc);
+    assert(pcAddr < 0xFFFF);
+
+    u8 d8 = memory->Read(pcAddr + 1);
+
+    u8 prevValue = state->Get8BitRegisterValue(dstReg);
+    u8 newValue = prevValue + d8;
+
+    u8 prevFlags = state->GetFlags();
+    u8 newFlags = 0;
+    if (newValue == 0) {
+        newFlags |= FLAG_ZERO;
+    }
+    if (prevValue < 0b00010000 && newValue >= 0b00010000) {
+        newFlags |= FLAG_HC;
+    }
+    if (newValue <= prevValue && d8 != 0) {
+        newFlags |= FLAG_C;
+    }
+    return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(dstReg, prevValue, newValue), 2, 2);
+}
+
 template <RegisterName DST, RegisterName SRC>
 InstructionResult AddFromAddrReg(GbCpuState const * state, MemoryState const * memory)
 {

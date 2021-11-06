@@ -211,7 +211,7 @@ Instruction const INSTR_C2(0xC2, 0xC200, "JP NZ, a16", 3, 3, JpNFlagA16<0b100000
 Instruction const INSTR_C3(0xC3, 0xC300, "JP a16", 3, 4, JpA16);
 // C4
 Instruction const INSTR_C5(0xC5, 0xC500, "PUSH BC", 1, 4, Push<RegisterName::BC>);
-// C6
+Instruction const INSTR_C6(0xC6, 0xC600, "ADD A, d8", 2, 2, AddD8<RegisterName::A>);
 Instruction const INSTR_C7(0xC7, 0xC700, "RST 0", 1, 4, Rst<0>);
 Instruction const INSTR_C8(0xC8, 0xC800, "RET Z", 1, 2, RetFlag<0b10000000>);
 Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret);
@@ -715,7 +715,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_C3,
     &INSTR_INVALID,
     &INSTR_C5, //C5
-    &INSTR_INVALID,
+    &INSTR_C6,
     &INSTR_C7,
     &INSTR_C8,
     &INSTR_C9,
