@@ -101,9 +101,9 @@
       "dependsOn": ["msbuild"],
       "type": "shell",
       "windows": {
-        "command": "./gb4e_tests.exe",
+        "command": "./build/Debug/gb4e_tests.exe",
         "options": {
-          "cwd": "${workspaceFolder}/build/Debug"
+          "cwd": "${workspaceFolder}"
         }
       }
     }
