@@ -10,6 +10,7 @@ namespace gb4e
 class Renderer;
 
 int constexpr BGPD_SIZE = 64;
+int constexpr OAM_SIZE = 160;
 
 int constexpr OAM_READ_CYCLES = 80;
 int constexpr VRAM_READ_CYCLES = 172;
@@ -37,6 +38,14 @@ u8 constexpr BG_HORIZONTAL_FLIP = BIT(5);
 u8 constexpr BG_TILE_VRAM_BANK = BIT(3); // 0=Bank 0, 1=Bank 1
 u8 constexpr BG_PALETTE_NUMBER_MAX = BIT(2);
 
+// OAM Attributes
+u8 constexpr OAM_BG_OVER_OBJ = BIT(7);                 // 0=No, 1=BG and Window colors 1-3 over the OBJ
+u8 constexpr OAM_Y_FLIP = BIT(6);                      // 0=Normal, 1=Vertically mirrored
+u8 constexpr OAM_X_FLIP = BIT(5);                      // 0=Normal, 1=Horizontally mirrored
+u8 constexpr OAM_PALETTE_NUMBER = BIT(4);              // **Non CGB Mode Only** (0=OBP0, 1=OBP1)
+u8 constexpr OAM_TILE_VRAM_BANK = BIT(3);              // **CGB Mode Only**     (0=Bank 0, 1=Bank 1)
+u8 constexpr OAM_PALETTE_NUMBER_CGB = BITS<0, 2>(0xF); // **CGB Mode Only**     (OBP0-7)
+
 enum class GbGpuMode { OAM_READ, VRAM_READ, HBLANK, VBLANK };
 
 struct Background {
@@ -48,6 +57,13 @@ struct GpuTickResult {
     // Bit 0: V-blank
     // Bit 1: LCD STAT
     u8 interrupts;
+};
+
+struct OamEntry {
+    u8 spriteX;
+    u8 spriteY;
+    u8 tileIdx;
+    u8 attr;
 };
 
 struct Pixel {
@@ -72,6 +88,8 @@ public:
     Background LoadTile(u16 tilemapLocation, u16 x, u16 y);
     u16 GetColorIndex(u16 tileRow, u8 xInTile);
 
+    std::array<OamEntry, 40> DebugGetOam() const;
+
 private:
     GpuTickResult CycleOamRead();
     GpuTickResult CycleVramRead();
@@ -80,6 +98,7 @@ private:
 
     void DrawScanlinePixel(u8 x);
     Pixel DrawScanlineBackground(u8 x);
+    Pixel DrawScanlineSprite(u8 x);
 
     u16 HorizontalFlip(u16 data);
 
@@ -115,6 +134,7 @@ private:
     std::array<u8, VRAM_SIZE> & activeBank = bank0;
 
     std::array<u8, BGPD_SIZE> bgPaletteData = {0};
+    std::array<u8, OAM_SIZE> oamData = {0};
 
     std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> framebuffer;
 

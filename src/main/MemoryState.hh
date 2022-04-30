@@ -10,6 +10,7 @@ class Cartridge;
 class ApuState;
 class GbCpuState;
 class GbGpuState;
+class GbJoypad;
 
 class MemoryState
 {
@@ -33,8 +34,8 @@ private:
 class GbMemoryState : public MemoryState
 {
 public:
-    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, ApuState * apu, Cartridge * cartridge)
-        : cpu(cpu), gpu(gpu), apu(apu), cartridge(cartridge)
+    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, ApuState * apu, Cartridge * cartridge, GbJoypad * joypad)
+        : cpu(cpu), gpu(gpu), apu(apu), cartridge(cartridge), joypad(joypad)
     {
     }
 
@@ -47,5 +48,6 @@ private:
     GbGpuState * gpu;
     ApuState * apu;
     Cartridge * cartridge;
+    GbJoypad * joypad;
 };
 }

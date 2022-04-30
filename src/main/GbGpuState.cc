@@ -53,6 +53,8 @@ std::optional<u8> GbGpuState::ReadMemory(u16 location) const
 {
     if (location >= 0x8000 && location <= 0x9FFF) {
         return activeBank[location - 0x8000];
+    } else if (location >= 0xFE00 && location <= 0xFE9F) {
+        return oamData[location - 0xFE00];
     } else if (location == 0xFF40) {
         return lcdc;
     } else if (location == 0xFF42) {
@@ -87,6 +89,9 @@ bool GbGpuState::WriteMemory(u16 location, u8 value)
 {
     if (location >= 0x8000 && location <= 0x9FFF) {
         activeBank[location - 0x8000] = value;
+        return true;
+    } else if (location >= 0xFE00 && location <= 0xFE9F) {
+        oamData[location - 0xFE00] = value;
         return true;
     } else if (location == 0xFF40) {
         lcdc = value;
@@ -195,10 +200,19 @@ GpuTickResult GbGpuState::CycleVblank()
 void GbGpuState::DrawScanlinePixel(u8 x)
 {
     assert(x < SCREEN_WIDTH);
+
+    bool bgWindowEnabled = lcdc & LCDC_BG_WIN_PRIORITY;
+    bool spriteEnabled = lcdc & LCDC_SPRITE_ENABLE;
+
     Pixel bg = DrawScanlineBackground(x);
+    Pixel sprite = DrawScanlineSprite(x);
 
     u16 framebufferIdx = currentScanline * SCREEN_WIDTH + x;
     framebuffer[framebufferIdx] = DMG_COLOR_PALETTE[bg.color];
+
+    if (spriteEnabled && sprite.color != 0) {
+        framebuffer[framebufferIdx] = DMG_COLOR_PALETTE[sprite.color];
+    }
 }
 
 Pixel GbGpuState::DrawScanlineBackground(u8 scanX)
@@ -234,12 +248,60 @@ Pixel GbGpuState::DrawScanlineBackground(u8 scanX)
     return ret;
 }
 
+Pixel GbGpuState::DrawScanlineSprite(u8 scanX)
+{
+    u8 spriteSize = lcdc & LCDC_SPRITE_SIZE;
+    u8 spriteHeight = spriteSize ? 16 : 8;
+
+    // TODO: Real hardware is limited to 10 sprites per scanline
+    for (int i = 0; i < 160; i += 4) {
+        u8 spriteY = oamData[i] - 16;
+        u8 spriteX = oamData[i + 1] - 8;
+        u8 tileIdx = oamData[i + 2];
+        u8 attributes = oamData[i + 3];
+
+        if (currentScanline < spriteY || currentScanline >= (spriteY + spriteHeight)) {
+            continue;
+        }
+
+        if (scanX < spriteX || scanX >= (spriteX + 8)) {
+            continue;
+        }
+
+        u8 yInTile = currentScanline - spriteY;
+        // TODO: Vertical flip
+        yInTile *= 2;
+        u16 tdaddr = tileIdx * 16 + yInTile;
+        u16 data = bank0[tdaddr];
+        data |= bank0[tdaddr + 1] << 8;
+
+        if (attributes & OAM_X_FLIP) {
+            data = HorizontalFlip(data);
+        }
+
+        u8 xInTile = scanX - spriteX;
+        if (xInTile > 7) {
+            continue;
+        }
+        u16 index = GetColorIndex(data, xInTile);
+
+        Pixel ret;
+        ret.color = bgp[index];
+        return ret;
+    }
+
+    Pixel ret;
+    ret.color = 0;
+    return ret;
+}
+
 Background GbGpuState::LoadTile(u16 tilemapLocation, u16 x, u16 y)
 {
     Background ret;
 
-    u16 tmaddr = tilemapLocation, tdaddr;
+    u16 tmaddr = tilemapLocation;
     tmaddr += (((y >> 3) << 5) + (x >> 3)) & 0x03ff;
+    u16 tdaddr;
     if ((lcdc & LCDC_8000_ADDRESS_MODE) == 0) {
         tdaddr = 0x1000 + ((s8)bank0[tmaddr] << 4);
     } else {
@@ -306,5 +368,17 @@ u16 GbGpuState::HorizontalFlip(u16 data)
 {
     return (data & 0x8080) >> 7 | (data & 0x4040) >> 5 | (data & 0x2020) >> 3 | (data & 0x1010) >> 1 |
            (data & 0x0808) << 1 | (data & 0x0404) << 3 | (data & 0x0202) << 5 | (data & 0x0101) << 7;
+}
+
+std::array<OamEntry, 40> GbGpuState::DebugGetOam() const
+{
+    std::array<OamEntry, 40> ret;
+    for (int i = 0; i < 40; ++i) {
+        ret[i].spriteY = oamData[i * 4 + 0];
+        ret[i].spriteX = oamData[i * 4 + 1];
+        ret[i].tileIdx = oamData[i * 4 + 2];
+        ret[i].attr = oamData[i * 4 + 3];
+    }
+    return ret;
 }
 };

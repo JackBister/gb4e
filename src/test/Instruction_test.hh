@@ -2380,6 +2380,173 @@ TEST Instr_AddD8_1()
     PASS();
 }
 
+TEST Instr_CondCall_NoJump()
+{
+    using namespace gb4e;
+    auto applier = CallConditionalA16<FLAG_ZERO, true>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.SetFlags(0);
+    auto sp = GetRegister(RegisterName::SP);
+    auto pc = GetRegister(RegisterName::PC);
+    state.Set16BitRegisterValue(sp, 0x12);
+    state.Set16BitRegisterValue(pc, 0x01);
+    memory.Write(0x01, 0xCC);
+    memory.Write(0x02, 0xEF);
+    memory.Write(0x03, 0xBE);
+
+    memory.Write(0x10, 0xBE);
+    memory.Write(0x11, 0xBA);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(!result.GetFlagSet().has_value());
+    ASSERT(result.GetMemoryWrites().empty());
+    ASSERT(result.GetRegisterWrites().empty());
+    ASSERT_EQ(3, result.GetConsumedBytes());
+    ASSERT_EQ(6, result.GetConsumedCycles());
+    PASS();
+}
+
+TEST Instr_CondCall_Jump()
+{
+    using namespace gb4e;
+    auto applier = CallConditionalA16<FLAG_ZERO, true>;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.SetFlags(FLAG_ZERO);
+    auto sp = GetRegister(RegisterName::SP);
+    auto pc = GetRegister(RegisterName::PC);
+    state.Set16BitRegisterValue(sp, 0x12);
+    state.Set16BitRegisterValue(pc, 0x01);
+    memory.Write(0x01, 0xCC);
+    memory.Write(0x02, 0xEF);
+    memory.Write(0x03, 0xBE);
+
+    memory.Write(0x10, 0xBE);
+    memory.Write(0x11, 0xBA);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT_EQ(2, result.GetMemoryWrites().size());
+    auto memWriteHi = result.GetMemoryWrites()[0];
+    ASSERT_EQ(0x11, memWriteHi.GetLocation());
+    ASSERT_EQ(0xBA, memWriteHi.GetPreviousValue());
+    ASSERT_EQ(0x00, memWriteHi.GetValue());
+    auto memWriteLo = result.GetMemoryWrites()[1];
+    ASSERT_EQ(0x10, memWriteLo.GetLocation());
+    ASSERT_EQ(0xBE, memWriteLo.GetPreviousValue());
+    ASSERT_EQ(0x04, memWriteLo.GetValue());
+    ASSERT_EQ(2, result.GetRegisterWrites().size());
+    auto regWriteSp = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::SP, regWriteSp.GetRegister().GetRegisterName());
+    ASSERT_EQ(0x12, regWriteSp.GetWordPreviousValue());
+    ASSERT_EQ(0x10, regWriteSp.GetWordValue());
+    auto regWritePc = result.GetRegisterWrites()[1];
+    ASSERT_EQ(RegisterName::PC, regWritePc.GetRegister().GetRegisterName());
+    ASSERT_EQ(0x01, regWritePc.GetWordPreviousValue());
+    ASSERT_EQ(0xBEEF, regWritePc.GetWordValue());
+    ASSERT_EQ(0, result.GetConsumedBytes());
+    ASSERT_EQ(6, result.GetConsumedCycles());
+
+    PASS();
+}
+
+TEST Instr_SubD8_0()
+{
+    using namespace gb4e;
+    auto applier = SubD8;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xD6);
+    memory.Write(0x101, 0);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(FLAG_ZERO | FLAG_N, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_SubD8_1()
+{
+    using namespace gb4e;
+    auto applier = SubD8;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xD6);
+    memory.Write(0x101, 1);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(FLAG_N | FLAG_C, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0xFF, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_XorD8()
+{
+
+    using namespace gb4e;
+    auto applier = XorD8;
+    GbCpuState state;
+    MemoryStateFake memory;
+    state.Set8BitRegisterValue(Register(RegisterName::A), 0b11);
+    state.Set16BitRegisterValue(Register(RegisterName::PC), 0x100);
+    memory.Write(0x100, 0xEE);
+    memory.Write(0x101, 0b01);
+    state.SetFlags(0);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(result.GetFlagSet().has_value());
+    auto flagSet = result.GetFlagSet().value();
+    ASSERT_EQ(0, flagSet.GetValue());
+    ASSERT_EQ(1, result.GetRegisterWrites().size());
+    auto regWrite = result.GetRegisterWrites()[0];
+    ASSERT_EQ(RegisterName::A, regWrite.GetRegister().GetRegisterName());
+    ASSERT_EQ(0b10, regWrite.GetByteValue());
+    PASS();
+}
+
+TEST Instr_SetHL()
+{
+    using namespace gb4e;
+    auto applier = SetHL<7>;
+    GbCpuState state;
+    MemoryStateFake memory;
+
+    state.Set16BitRegisterValue(Register(RegisterName::HL), 0x100);
+    memory.Write(0x100, 0b00000001);
+
+    auto result = applier(&state, &memory);
+
+    ASSERT(!result.GetFlagSet().has_value());
+    ASSERT(result.GetRegisterWrites().empty());
+    ASSERT_EQ(1, result.GetMemoryWrites().size());
+    auto memWrite = result.GetMemoryWrites()[0];
+    ASSERT_EQ(0x100, memWrite.GetLocation());
+    ASSERT_EQ(0b00000001, memWrite.GetPreviousValue());
+    ASSERT_EQ(0b10000001, memWrite.GetValue());
+    PASS();
+}
+
 SUITE(Instruction_test)
 {
     RUN_TEST(Instr_Ld_B_A);
@@ -2478,4 +2645,9 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_Sla_Carry);
     RUN_TEST(Instr_AddD8_0);
     RUN_TEST(Instr_AddD8_1);
+    RUN_TEST(Instr_CondCall_Jump);
+    RUN_TEST(Instr_SubD8_0);
+    RUN_TEST(Instr_SubD8_1);
+    RUN_TEST(Instr_XorD8);
+    RUN_TEST(Instr_SetHL);
 }

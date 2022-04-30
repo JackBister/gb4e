@@ -14,11 +14,12 @@ auto const logger = Logger::Create("GbCpu");
 namespace gb4e
 {
 
-std::optional<GbCpu> GbCpu::Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer)
+std::optional<GbCpu> GbCpu::Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
+                                   InputSystem const & inputSystem)
 {
     logger->Infof("CLOCK_FREQUENCY=%zu, CYCLE_DURATION_NS=%zu", CLOCK_FREQUENCY, CYCLE_DURATION_NS);
 
-    return GbCpu(bootromSize, bootrom, gbModel, renderer);
+    return GbCpu(bootromSize, bootrom, gbModel, renderer, inputSystem);
 }
 
 void GbCpu::Reset()
@@ -46,6 +47,12 @@ void GbCpu::StepInstruction()
 int GbCpu::Tick(u64 deltaTimeNs)
 {
     int numCycles = 0;
+    auto joypadTickResult = joypad->Tick();
+    if (joypadTickResult.triggerInterrupt) {
+        u8 iflags = state->ReadMemory(0xFF0F).value();
+        iflags |= BIT(4);
+        state->WriteMemory(0xFF0F, iflags);
+    }
     auto beforeCycle = std::chrono::high_resolution_clock::now();
     while (deltaTimeNs > 0) {
         auto afterCycle = std::chrono::high_resolution_clock::now();
@@ -86,7 +93,19 @@ void GbCpu::TickCycle()
         state->WriteMemory(0xFF0F, iflags);
     }
     gb4e::ui::gpuCycleTimeNs = (std::chrono::high_resolution_clock::now() - beforeGpu).count();
-    waitCycles--;
+    --waitCycles;
+    if (oamDmaCycles > 0) {
+        --oamDmaCycles;
+        if (oamDmaCycles == 0) {
+            // TODO: This is probably incorrect if you write to FF46 during OAM DMA
+            u16 base = state->GetOamDmaLocation();
+            for (u16 i = 0; i < 0xA0; ++i) {
+                u8 value = memoryState->Read(base + i);
+                memoryState->Write(0xFE00 + i, value);
+            }
+            state->SetOamDmaLocation(0xFFFF);
+        }
+    }
     if (interruptRoutineCycle != 0xFF) {
         if (interruptRoutineCycle == 3) {
             Register constexpr spReg(RegisterName::SP);
@@ -116,12 +135,17 @@ void GbCpu::TickCycle()
         logger->Tracef("TickCycle waitCycles=%d, early out", waitCycles);
         return;
     }
+    u16 oamDmaLocBefore = state->GetOamDmaLocation();
     if (queuedInstructionResult.has_value()) {
         logger->Tracef("TickCycle applying instructionResult."); // TODO: InstructionResult::ToString
         auto beforeApply = std::chrono::high_resolution_clock::now();
         ApplyInstructionResult(state.get(), memoryState.get(), queuedInstructionResult.value());
         gb4e::ui::applyTimeNs = (std::chrono::high_resolution_clock::now() - beforeApply).count();
         queuedInstructionResult = {};
+    }
+    u16 oamDmaLocAfter = state->GetOamDmaLocation();
+    if (oamDmaLocAfter != oamDmaLocBefore) {
+        oamDmaCycles = 160;
     }
     u8 iflags = state->ReadMemory(0xFF0F).value();
     u8 interruptMask = iflags & state->GetInterruptEnable();
@@ -133,7 +157,7 @@ void GbCpu::TickCycle()
 
     u16 opcode = memoryState->Read16(pc);
     auto instruction = DecodeInstruction(opcode);
-    if (instruction->GetInstructionWord() == 0) {
+    if (opcode != 0 && instruction->GetInstructionWord() == 0) {
         logger->Infof("opcode decode failed, pc=%04x, opcode=%04x", pc, opcode);
     }
     logger->Tracef(
@@ -164,20 +188,24 @@ std::string GbCpu::DumpInstructions(u16 startAddress, u16 endAddress)
     }
     return ss.str();
 }
+
 GbCpu::GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> && state,
-             std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge)
+             std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge,
+             std::unique_ptr<GbJoypad> && joypad)
     : apuState(std::move(apuState)), state(std::move(state)), gpuState(std::move(gpuState)),
-      cartridge(std::move(cartridge)), memoryState(std::move(memoryState))
+      cartridge(std::move(cartridge)), memoryState(std::move(memoryState)), joypad(std::move(joypad))
 {
-    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get());
+    this->memoryState =
+        std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get(), joypad.get());
 }
 
-GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer)
+GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
+             InputSystem const & inputSystem)
     : apuState(new GbApuState()), gpuState(new GbGpuState(gbModel, renderer)),
-      state(new GbCpuState(bootromSize, bootrom)), cartridge(new Cartridge())
+      state(new GbCpuState(bootromSize, bootrom)), cartridge(new Cartridge()), joypad(new GbJoypad(inputSystem))
 {
-    this->memoryState = std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get());
-    // memcpy_s(&this->state->memory[0], MEMORY_SIZE, bootrom, bootromSize);
+    this->memoryState =
+        std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get(), joypad.get());
 }
 
 };

@@ -69,16 +69,6 @@ std::optional<u8> GbCpuState::ReadMemory(u16 location) const
     if (location >= 0xA000 && location <= 0xBFFF) {
         return {};
     }
-    if (location == 0xFF00) {
-        u8 ret = 0x0F;
-        if (!(joypSelect & 0b01)) {
-            ret &= dpad;
-        }
-        if (!(joypSelect & 0b10)) {
-            ret &= buttons;
-        }
-        return ret;
-    }
     if (location == 0xFF0F) {
         return interruptFlags;
     }
@@ -120,14 +110,13 @@ void GbCpuState::Set16BitRegisterValue(Register const reg, u16 value)
 
 bool GbCpuState::WriteMemory(u16 location, u8 value)
 {
+    if (location == 0xFF46) {
+        oamDmaLocation = value << 8;
+        return true;
+    }
     if (location == 0xFF50 && value) {
         isBootromActive = false;
         memory[location] = value;
-        return true;
-    }
-    if (location == 0xFF00) {
-        // 0b11 = return 0x0F, 0b10 = return dpad, 0b01 = return buttons, 0b00 = return buttons & dpad
-        joypSelect = BITS<4, 5>(value) >> 4;
         return true;
     }
     if (location == 0xFF0F) {

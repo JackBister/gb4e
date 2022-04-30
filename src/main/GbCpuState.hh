@@ -47,6 +47,9 @@ public:
     void SetInterruptMasterEnable(bool enabled) { this->ime = enabled; }
     void EnableInterruptsWithDelay() { this->hasPendingImeEnable = true; }
 
+    void SetOamDmaLocation(u16 oamDmaLocation) { this->oamDmaLocation = oamDmaLocation; }
+    u16 GetOamDmaLocation() const { return this->oamDmaLocation; }
+
 private:
     std::array<u16, 6> registers;
     std::array<u8, MEMORY_SIZE> memory{0};
@@ -56,13 +59,11 @@ private:
     // Set by DI, RETI, INT
     bool ime = false;
 
-    // FF00
-    u8 joypSelect = 0;
-    u8 buttons = 0x0F;
-    u8 dpad = 0x0F;
-
     // FF0F
     u8 interruptFlags = 0;
+
+    // FF46
+    u16 oamDmaLocation = 0xFFFF;
 
     // FFFF
     u8 interruptEnable = 0;

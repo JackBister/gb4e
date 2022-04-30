@@ -318,4 +318,48 @@ InstructionResult Rlca(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(reg, prevValue, newValue), 1, 1);
 }
 
+InstructionResult SubD8(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr dstReg(RegisterName::A);
+    Register constexpr pcReg(RegisterName::PC);
+
+    u16 pcValue = state->Get16BitRegisterValue(pcReg);
+    u8 imm = memory->Read(pcValue + 1);
+
+    u8 prevValue = state->Get8BitRegisterValue(dstReg);
+    u8 newValue = prevValue - imm;
+
+    u8 prevFlags = state->GetFlags();
+    u8 flags = FLAG_N; // Always set sub flag
+    if (newValue == 0) {
+        flags |= FLAG_ZERO;
+    }
+    if (prevValue > 0b00010000 && newValue <= 0b00010000) {
+        flags |= FLAG_HC;
+    }
+    if (newValue >= prevValue && imm != 0) {
+        flags |= FLAG_C;
+    }
+    return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 2, 2);
+}
+
+InstructionResult XorD8(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr dstReg(RegisterName::A);
+    Register constexpr pcReg(RegisterName::PC);
+
+    u16 pcValue = state->Get16BitRegisterValue(pcReg);
+    u8 imm = memory->Read(pcValue + 1);
+
+    u8 prevValue = state->Get8BitRegisterValue(dstReg);
+    u8 newValue = prevValue ^ imm;
+
+    u8 prevFlags = state->GetFlags();
+    u8 newFlags = 0;
+    if (newValue == 0) {
+        newFlags |= FLAG_ZERO;
+    }
+
+    return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(dstReg, prevValue, newValue), 2, 2);
+}
 };

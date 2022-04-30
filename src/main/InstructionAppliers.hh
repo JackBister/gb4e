@@ -188,6 +188,38 @@ InstructionResult Bit(GbCpuState const * state, MemoryState const * memory)
 
 InstructionResult CallA16(GbCpuState const * state, MemoryState const * memory);
 
+template <u8 FLAG, bool COND>
+InstructionResult CallConditionalA16(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr pc(RegisterName::PC);
+    Register constexpr sp(RegisterName::SP);
+
+    u8 flags = state->GetFlags();
+    u8 cond = flags & FLAG;
+    if ((COND && cond) || (!COND && !cond)) {
+        u16 prevSpAddr = state->Get16BitRegisterValue(sp);
+        u8 prevHi = memory->Read(prevSpAddr - 1);
+        u8 prevLo = memory->Read(prevSpAddr - 2);
+
+        u16 prevPc = state->Get16BitRegisterValue(pc);
+        u16 srcValue = prevPc + 3;
+        u8 newHi = (srcValue >> 8) & 0xFF;
+        u8 newLo = srcValue & 0xFF;
+
+        u16 newPc = memory->Read16(prevPc + 1);
+
+        return InstructionResult(
+            {MemoryWrite(prevSpAddr - 1, prevHi, newHi), MemoryWrite(prevSpAddr - 2, prevLo, newLo)},
+            {RegisterWrite(sp, prevSpAddr, prevSpAddr - 2), RegisterWrite(pc, prevPc, newPc)},
+            0, // TODO: Not sure I like this, this prevents GbCpuState::ApplyInstructionResult from adding even more to
+               // PC, since CALL should already put you at the final address. An alternative would be if all
+               // instructions instead returned a RegisterWrite to PC, but that could get pretty messy too.
+            6);
+    } else {
+        return InstructionResult(3, 3);
+    }
+}
+
 InstructionResult CpD8(GbCpuState const * state, MemoryState const * memory);
 
 template <RegisterName ADDR>
@@ -687,6 +719,18 @@ InstructionResult Rst(GbCpuState const * state, MemoryState const * memory)
                              4);
 }
 
+template <u8 B>
+InstructionResult SetHL(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr reg(RegisterName::HL);
+
+    u16 location = state->Get16BitRegisterValue(reg);
+    u8 prevValue = memory->Read(location);
+    u8 newValue = prevValue | BIT(B);
+
+    return InstructionResult(MemoryWrite(location, prevValue, newValue), 2, 4);
+}
+
 template <RegisterName SRC>
 InstructionResult Sla(GbCpuState const * state, MemoryState const * memory)
 {
@@ -733,6 +777,8 @@ InstructionResult Sub(GbCpuState const * state, MemoryState const * memory)
     }
     return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
 }
+
+InstructionResult SubD8(GbCpuState const * state, MemoryState const * memory);
 
 template <RegisterName REG>
 InstructionResult Swap(GbCpuState const * state, MemoryState const * memory)
@@ -805,4 +851,6 @@ InstructionResult Xor(GbCpuState const * state, MemoryState const * memory)
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     }
 }
+
+InstructionResult XorD8(GbCpuState const * state, MemoryState const * memory);
 };

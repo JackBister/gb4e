@@ -10,11 +10,13 @@
 #include "Common.hh"
 #include "GbCpuState.hh"
 #include "GbGpuState.hh"
+#include "GbJoypad.hh"
 #include "MemoryState.hh"
 #include "audio/GbApuState.hh"
 
 namespace gb4e
 {
+class InputSystem;
 class Renderer;
 class RomFile;
 
@@ -24,9 +26,11 @@ public:
     /**
      * bootrom must be 256 bytes long and must be valid for as long as the CPU is running
      */
-    static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer);
+    static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
+                                       InputSystem const & inputSystem);
     GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> && state,
-          std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge);
+          std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge,
+          std::unique_ptr<GbJoypad> && joypad);
 
     void Reset();
 
@@ -43,6 +47,7 @@ public:
     std::string DumpInstructions(u16 startAddress, u16 endAddress);
 
     GbCpuState const * GetState() const { return state.get(); }
+    GbGpuState const * GetGpu() const { return gpuState.get(); }
     MemoryState const * GetMemory() const { return memoryState.get(); }
 
     void AddBreakpoint(u16 breakpoint) { breakpoints.emplace(breakpoint); }
@@ -50,13 +55,15 @@ public:
     std::set<u16> const & GetBreakpoints() const { return breakpoints; }
 
 private:
-    GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer);
+    GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
+          InputSystem const & inputSystem);
 
     std::unique_ptr<ApuState> apuState;
     std::unique_ptr<GbCpuState> state;
     std::unique_ptr<GbGpuState> gpuState;
     std::unique_ptr<Cartridge> cartridge;
     std::unique_ptr<MemoryState> memoryState;
+    std::unique_ptr<GbJoypad> joypad;
 
     u64 clockTimeNs = 0;
     u64 lastCycleNs = 0;
@@ -72,6 +79,10 @@ private:
     // false and the current PC is pushed. On cycle 5 the PC is set to the interrupt handler.
     u8 interruptRoutineCycle = 0xFF;
     u16 queuedInterruptAddress = 0;
+
+    // If not 0, OAM DMA is ongoing from address contained in state->GetOamDmaLocation()
+    // When OAM DMA is triggered this starts to tick down from 160
+    u8 oamDmaCycles = 0;
 
     std::optional<InstructionResult> queuedInstructionResult;
 

@@ -17,6 +17,7 @@
 
 #include "ui/Console.hh"
 #include "ui/Debugger.hh"
+#include "ui/GpuDebugger.hh"
 #include "ui/InstructionWatch.hh"
 #include "ui/MemoryWatch.hh"
 #include "ui/Metrics.hh"
@@ -72,7 +73,7 @@ int main(int argc, char ** argv)
     }
 
     gb4e::GbRenderer gbRenderer;
-    gb4e::InputSystem inputSystem;
+    gb4e::InputSystemImpl inputSystem;
 
     gb4e::ui::InitInstructionWatch();
 
@@ -92,8 +93,8 @@ int main(int argc, char ** argv)
 
     logger->Infof("%s", romFile.ToString().c_str());
 
-    std::optional<gb4e::GbCpu> gbCpuOpt =
-        gb4e::GbCpu::Create(bootrom.value().size, bootrom.value().arr.get(), gb4e::GbModel::DMG, &gbRenderer);
+    std::optional<gb4e::GbCpu> gbCpuOpt = gb4e::GbCpu::Create(
+        bootrom.value().size, bootrom.value().arr.get(), gb4e::GbModel::DMG, &gbRenderer, inputSystem);
     if (!gbCpuOpt.has_value()) {
         logger->Errorf("Failed to create GbCpu");
         return 1;
@@ -102,8 +103,6 @@ int main(int argc, char ** argv)
     gb4e::GbCpu gbCpu = std::move(gbCpuOpt.value());
 
     gbCpu.LoadRom(&romFile);
-    gbCpu.DumpInstructions(0x00, 0xA8);
-    gbCpu.DumpInstructions(0xe0, 0xFF);
 
     auto lastTick = std::chrono::high_resolution_clock::now();
     while (1) {
@@ -125,6 +124,7 @@ int main(int argc, char ** argv)
         gb4e::ui::DrawRegisterWatch(gbCpu.GetState());
         gb4e::ui::DrawInstructionWatch(gbCpu.GetState(), gbCpu.GetMemory());
         gb4e::ui::DrawDebugger(&gbCpu);
+        gb4e::ui::DrawGpuDebugger(gbCpu.GetGpu());
         gb4e::ui::DrawConsole();
         gb4e::ui::DrawMemoryWatch(gbCpu.GetState(), gbCpu.GetMemory());
         gb4e::ui::DrawMetrics();

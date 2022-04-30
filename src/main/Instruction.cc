@@ -217,7 +217,7 @@ Instruction const INSTR_C8(0xC8, 0xC800, "RET Z", 1, 2, RetFlag<0b10000000>);
 Instruction const INSTR_C9(0xC9, 0xC900, "RET", 1, 4, Ret);
 Instruction const INSTR_CA(0xCA, 0xCA00, "JP Z, a16", 3, 3, JpFlagA16<0b10000000>);
 Instruction const INSTR_CB(0xCB, 0xCB00, "INVALID CB", 1, 1, APPLIER_NOP);
-// CC
+Instruction const INSTR_CC(0xCC, 0xCC00, "CALL Z, a16", 3, 6, CallConditionalA16<FLAG_ZERO, true>);
 Instruction const INSTR_CD(0xCD, 0xCD00, "CALL a16", 3, 6, CallA16);
 Instruction const INSTR_CE(0xCE, 0xCE00, "ADC d8", 2, 2, AdcD8);
 Instruction const INSTR_CF(0xCF, 0xCF00, "RST 1", 1, 4, Rst<1>);
@@ -228,7 +228,7 @@ Instruction const INSTR_D2(0xD2, 0xD200, "JP NC, a16", 3, 3, JpNFlagA16<0b000100
 Instruction const INSTR_D3(0xD3, 0xD300, "INVALID D3", 1, 1, APPLIER_NOP);
 // D4
 Instruction const INSTR_D5(0xD5, 0xD500, "PUSH DE", 1, 4, Push<RegisterName::DE>);
-// D6
+Instruction const INSTR_D6(0xD6, 0xD600, "SUB d8", 2, 2, SubD8);
 Instruction const INSTR_D7(0xD7, 0xD700, "RST 2", 1, 4, Rst<2>);
 Instruction const INSTR_D8(0xD8, 0xD800, "RET C", 1, 2, RetFlag<0b00010000>);
 Instruction const INSTR_D9(0xD9, 0xD900, "RETI", 1, 4, Reti);
@@ -253,7 +253,7 @@ Instruction const INSTR_EA(0xEA, 0xEA00, "LD (a16), A", 3, 4, LdA16<RegisterName
 Instruction const INSTR_EB(0xEB, 0xEB00, "INVALID EB", 1, 1, APPLIER_NOP);
 Instruction const INSTR_EC(0xEC, 0xEC00, "INVALID EC", 1, 1, APPLIER_NOP);
 Instruction const INSTR_ED(0xED, 0xED00, "INVALID ED", 1, 1, APPLIER_NOP);
-// EE
+Instruction const INSTR_EE(0xEE, 0xEE00, "XOR d8", 2, 2, XorD8);
 Instruction const INSTR_EF(0xEF, 0xEF00, "RST 5", 1, 4, Rst<5>);
 
 Instruction const INSTR_F0(0xF0, 0xF000, "LD A, (a8)", 2, 3, LdFromA8<RegisterName::A>);
@@ -438,6 +438,15 @@ Instruction const INSTR_CBBC(0xCB, 0xCBBC, "RES 7, H", 2, 2, Res<7, RegisterName
 Instruction const INSTR_CBBD(0xCB, 0xCBBD, "RES 7, L", 2, 2, Res<7, RegisterName::L>);
 Instruction const INSTR_CBBE(0xCB, 0xCBBE, "RES 7, (HL)", 2, 4, Res<7, RegisterName::HL>);
 Instruction const INSTR_CBBF(0xCB, 0xCBBF, "RES 7, A", 2, 2, Res<7, RegisterName::A>);
+
+Instruction const INSTR_CBC6(0xCB, 0xCBC6, "SET 0, (HL)", 2, 4, SetHL<0>);
+Instruction const INSTR_CBCE(0xCB, 0xCBCE, "SET 1, (HL)", 2, 4, SetHL<1>);
+Instruction const INSTR_CBD6(0xCB, 0xCBD6, "SET 2, (HL)", 2, 4, SetHL<2>);
+Instruction const INSTR_CBDE(0xCB, 0xCBDE, "SET 3, (HL)", 2, 4, SetHL<3>);
+Instruction const INSTR_CBE6(0xCB, 0xCBE6, "SET 4, (HL)", 2, 4, SetHL<4>);
+Instruction const INSTR_CBEE(0xCB, 0xCBEE, "SET 5, (HL)", 2, 4, SetHL<5>);
+Instruction const INSTR_CBF6(0xCB, 0xCBF6, "SET 6, (HL)", 2, 4, SetHL<6>);
+Instruction const INSTR_CBFE(0xCB, 0xCBFE, "SET 7, (HL)", 2, 4, SetHL<7>);
 
 /*
 
@@ -721,7 +730,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_C9,
     &INSTR_CA, //CA
     &INSTR_CB,
-    &INSTR_INVALID,
+    &INSTR_CC,
     &INSTR_CD,
     &INSTR_CE,
     &INSTR_CF, //CF
@@ -731,7 +740,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_D3,
     &INSTR_INVALID,
     &INSTR_D5, //D5
-    &INSTR_INVALID,
+    &INSTR_D6,
     &INSTR_D7,
     &INSTR_D8,
     &INSTR_D9,
@@ -755,7 +764,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_EB,
     &INSTR_EC,
     &INSTR_ED,
-    &INSTR_INVALID,
+    &INSTR_EE,
     &INSTR_EF, //EF
     &INSTR_F0, //F0
     &INSTR_F1,
@@ -973,7 +982,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // C5
-    &INSTR_INVALID,
+    &INSTR_CBC6,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
@@ -981,7 +990,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_CBCE,
     &INSTR_INVALID, // CF
     &INSTR_INVALID, // D0
     &INSTR_INVALID,
@@ -989,7 +998,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // D5
-    &INSTR_INVALID,
+    &INSTR_CBD6,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
@@ -997,7 +1006,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_CBDE,
     &INSTR_INVALID, // DF
     &INSTR_INVALID, // E0
     &INSTR_INVALID,
@@ -1005,7 +1014,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // E5
-    &INSTR_INVALID,
+    &INSTR_CBE6,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
@@ -1013,7 +1022,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_CBEE,
     &INSTR_INVALID, // EF
     &INSTR_INVALID, // F0
     &INSTR_INVALID,
@@ -1021,7 +1030,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID, // F5
-    &INSTR_INVALID,
+    &INSTR_CBF6,
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
@@ -1029,7 +1038,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_16BIT{
     &INSTR_INVALID,
     &INSTR_INVALID,
     &INSTR_INVALID,
-    &INSTR_INVALID,
+    &INSTR_CBFE,
     &INSTR_INVALID, // FF
 };
 // clang-format on

@@ -5,6 +5,7 @@
 #include "Cartridge.hh"
 #include "GbCpuState.hh"
 #include "GbGpuState.hh"
+#include "GbJoypad.hh"
 #include "audio/GbApuState.hh"
 
 namespace gb4e
@@ -28,6 +29,10 @@ void MemoryStateFake::Write(u16 location, u8 value)
 
 u8 GbMemoryState::Read(u16 location) const
 {
+    auto joypValue = joypad->ReadMemory(location);
+    if (joypValue.has_value()) {
+        return joypValue.value();
+    }
     auto gpuValue = gpu->ReadMemory(location);
     if (gpuValue.has_value()) {
         return gpuValue.value();
@@ -58,6 +63,7 @@ void GbMemoryState::Write(u16 location, u8 value)
 {
     cpu->WriteMemory(location, value);
     gpu->WriteMemory(location, value);
+    joypad->WriteMemory(location, value);
     apu->WriteMemory(location, value);
 }
 }

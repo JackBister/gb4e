@@ -4,6 +4,7 @@
 
 #include "GbCpu.hh"
 #include "GbCpuState.hh"
+#include "InputSystem.hh"
 #include "Renderer.hh"
 
 TEST ApplyInstructionResult_AppliesPendingIme()
@@ -26,10 +27,12 @@ TEST Interrupt_Vblank_ImeOff()
 {
     using namespace gb4e;
 
+    InputSystemFake inputSystem;
     GbCpu gbCpu(std::make_unique<ApuStateFake>(),
                 std::make_unique<GbCpuState>(),
                 std::make_unique<GbGpuState>(GbModel::DMG, new NopRenderer()),
-                std::make_unique<Cartridge>());
+                std::make_unique<Cartridge>(),
+                std::make_unique<GbJoypad>(inputSystem));
 
     // TODO:
     PASS();

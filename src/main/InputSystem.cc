@@ -5,7 +5,7 @@
 
 namespace gb4e
 {
-void InputSystem::Tick()
+void InputSystemImpl::Tick()
 {
     auto & imguiIo = ImGui::GetIO();
     SDL_Event e;
@@ -35,5 +35,24 @@ void InputSystem::Tick()
     imguiIo.MousePos = ImVec2(mouseX, mouseY);
     imguiIo.MouseDown[0] = mouseState & SDL_BUTTON(SDL_BUTTON_LEFT);
     imguiIo.MouseDown[1] = mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT);
+
+    SetState(DPAD_DOWN, imguiIo.KeysDown[SDL_SCANCODE_DOWN]);
+    SetState(DPAD_UP, imguiIo.KeysDown[SDL_SCANCODE_UP]);
+    SetState(DPAD_LEFT, imguiIo.KeysDown[SDL_SCANCODE_LEFT]);
+    SetState(DPAD_RIGHT, imguiIo.KeysDown[SDL_SCANCODE_RIGHT]);
+    SetState(BTN_START, imguiIo.KeysDown[SDL_SCANCODE_RETURN]);
+    SetState(BTN_SELECT, imguiIo.KeysDown[SDL_SCANCODE_RSHIFT]);
+    SetState(BTN_B, imguiIo.KeysDown[SDL_SCANCODE_Z]);
+    SetState(BTN_A, imguiIo.KeysDown[SDL_SCANCODE_X]);
 }
+
+void InputSystemImpl::SetState(JoypadButton btn, bool state)
+{
+    if (!state) {
+        joypadState |= BIT(btn);
+    } else {
+        joypadState &= ~BIT(btn);
+    }
+}
+
 };
