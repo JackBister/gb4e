@@ -17,6 +17,7 @@ namespace gb4e::ui
 
 int deltaTimeNs = 250;
 
+bool breakOnDecodeError = false;
 char breakpointBuf[BREAKPOINT_BUF_SIZE];
 
 void DrawDebugger(GbCpu * cpu)
@@ -42,6 +43,10 @@ void DrawDebugger(GbCpu * cpu)
             if (ImGui::Button("Reset")) {
                 cpu->Reset();
             }
+        }
+
+        if (ImGui::Checkbox("Break on decode error", &breakOnDecodeError)) {
+            cpu->SetBreakOnDecodeError(breakOnDecodeError);
         }
 
         if (ImGui::Button("Step fwd")) {

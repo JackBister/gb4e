@@ -54,6 +54,9 @@ public:
     void RemoveBreakpoint(u16 breakpoint) { breakpoints.erase(breakpoint); }
     std::set<u16> const & GetBreakpoints() const { return breakpoints; }
 
+    void SetBreakOnDecodeError(bool b) { breakOnDecodeError = b; }
+    bool GetBreakOnDecodeError() const { return breakOnDecodeError; }
+
 private:
     GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
           InputSystem const & inputSystem);
@@ -89,5 +92,9 @@ private:
     // If the value of the PC register ever is contained in breakpoints, GbCpu::Tick will return early
     // This is to avoid skipping past breakpoints when emulating multiple instructions in one tick
     std::set<u16> breakpoints;
+
+    // If true and the CPU encounters an opcode which decodes to INSTR_INVALID, the current PC will be added to
+    // breakpoints
+    bool breakOnDecodeError = false;
 };
 };

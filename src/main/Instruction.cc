@@ -1058,11 +1058,9 @@ Instruction const * DecodeInstruction(u16 opcode)
     if ((opcode & 0x00FF) == 0x00CB) {
         auto ret = Decode16BitInstruction(opcode >> 8);
         return ret;
-        // return Decode16BitInstruction(opcode >> 8);
     } else {
         auto ret = Decode8BitInstruction(opcode & 0xFF);
         return ret;
-        // return Decode8BitInstruction(opcode & 0xFF);
     }
 }
 }

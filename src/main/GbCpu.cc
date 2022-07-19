@@ -78,6 +78,15 @@ int GbCpu::Tick(u64 deltaTimeNs)
         if (breakpoints.find(pc) != breakpoints.end()) {
             return numCycles;
         }
+        if (breakOnDecodeError) {
+            u16 pc = state->Get16BitRegisterValue(GetRegister(RegisterName::PC));
+            u16 opcode = memoryState->Read16(pc);
+            auto instruction = DecodeInstruction(opcode);
+            if (opcode != 0 && instruction->GetInstructionWord() == 0) {
+                breakpoints.emplace(pc);
+                return numCycles;
+            }
+        }
     }
     return numCycles;
 }
