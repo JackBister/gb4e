@@ -57,6 +57,19 @@ public:
     void SetBreakOnDecodeError(bool b) { breakOnDecodeError = b; }
     bool GetBreakOnDecodeError() const { return breakOnDecodeError; }
 
+    void SetHistoricInstructionsBufferSize(size_t size)
+    {
+        historicInstructions.resize(size);
+        if (historicInstructionsPtr >= historicInstructions.size()) {
+            historicInstructionsPtr = 0;
+        }
+    }
+    std::vector<HistoricInstructionResult> const & GetHistoricInstructionsBuffer() const
+    {
+        return historicInstructions;
+    }
+    size_t GetHistoricInstructionsPtr() const { return historicInstructionsPtr; }
+
 private:
     GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
           InputSystem const & inputSystem);
@@ -70,6 +83,7 @@ private:
 
     u64 clockTimeNs = 0;
     u64 lastCycleNs = 0;
+    u64 totalCycles = 0;
 
     // Represents how many cycles the currently executing command takes to execute
     // When QueueInstructionResult is called, waitCycles will be set to InstructionResult::consumedCycles and the
@@ -96,5 +110,8 @@ private:
     // If true and the CPU encounters an opcode which decodes to INSTR_INVALID, the current PC will be added to
     // breakpoints
     bool breakOnDecodeError = false;
+
+    std::vector<HistoricInstructionResult> historicInstructions;
+    size_t historicInstructionsPtr;
 };
 };

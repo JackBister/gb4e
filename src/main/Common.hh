@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 using s8 = signed char;
 using u8 = unsigned char;
@@ -65,4 +66,5 @@ u8 FindFirstSet(T val)
     return ret;
 }
 
+std::string FlagsToString(u8 flags);
 }

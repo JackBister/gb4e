@@ -22,6 +22,7 @@ enum JoypadButton {
 class InputSystem
 {
 public:
+    virtual void Init() = 0;
     virtual void Tick() = 0;
 
     virtual u8 GetJoypadState() const = 0;
@@ -30,6 +31,7 @@ public:
 class InputSystemFake : public InputSystem
 {
 public:
+    void Init() override {}
     void Tick() override {}
 
     // Bits 0-3=dpad, bits 4-7=buttons
@@ -50,6 +52,7 @@ private:
 class InputSystemImpl : public InputSystem
 {
 public:
+    void Init() override;
     void Tick() override;
 
     u8 GetJoypadState() const override { return joypadState; }

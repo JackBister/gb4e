@@ -16,8 +16,8 @@ std::string FlagSet::ToString() const
 {
     std::stringstream ss;
     ss << '{';
-    ss << '\t' << "\"previousValue\": " << std::hex << (int)previousValue << ',';
-    ss << '\t' << "\"value\": " << std::hex << (int)value << ' ';
+    ss << '\t' << "\"previousValue\": " << FlagsToString(previousValue) << ',';
+    ss << '\t' << "\"value\": " << FlagsToString(value) << ' ';
     ss << '}';
     return ss.str();
 }
@@ -54,6 +54,47 @@ std::string RegisterWrite::ToString() const
     ss << '\t' << "\"value\": " << std::dec << (int)(reg.Is16Bit() ? wordValue : byteValue) << ' ';
     ss << '}';
     return ss.str();
+}
+
+InstructionResult InstructionResult::Reverse() const
+{
+    std::optional<FlagSet> newFlagSet;
+    if (flagSet.has_value()) {
+        newFlagSet = FlagSet(flagSet.value().GetValue(), flagSet.value().GetPreviousValue());
+    }
+
+    std::optional<InterruptSet> newInterruptSet;
+    if (interruptSet.has_value()) {
+        newInterruptSet = InterruptSet(
+            interruptSet.value().GetValue(),
+            interruptSet.value().GetPreviousValue(),
+            // TODO: To handle this properly, we need to peek an extra InstructionResult ahead when reverse stepping?
+            interruptSet.value().GetWithInstructionDelay());
+    }
+
+    std::vector<MemoryWrite> newMemWrites;
+    newMemWrites.reserve(memoryWrites.size());
+    for (auto const & old : memoryWrites) {
+        newMemWrites.emplace_back(old.GetLocation(), old.GetValue(), old.GetPreviousValue());
+    }
+
+    std::vector<RegisterWrite> newRegWrites;
+    newRegWrites.reserve(registerWrites.size());
+    for (auto const & old : registerWrites) {
+        if (old.GetRegister().Is16Bit()) {
+            newRegWrites.emplace_back(old.GetRegister(), old.GetWordValue(), old.GetWordPreviousValue());
+        } else {
+            newRegWrites.emplace_back(old.GetRegister(), old.GetByteValue(), old.GetBytePreviousValue());
+        }
+    }
+
+    // TODO: ... We need to know that these should be minused instead of plussed when stepping backwards
+    // TODO: We  also need to think through how these are handled for instructions that affect the PC
+    u16 newConsumedBytes = consumedBytes;
+    u16 newConsumedCycles = consumedCycles;
+
+    return InstructionResult(
+        newFlagSet, newInterruptSet, newMemWrites, newRegWrites, newConsumedBytes, newConsumedCycles);
 }
 
 std::string InstructionResult::ToString() const

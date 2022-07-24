@@ -93,6 +93,7 @@ int GbCpu::Tick(u64 deltaTimeNs)
 
 void GbCpu::TickCycle()
 {
+    totalCycles++;
     auto beforeGpu = std::chrono::high_resolution_clock::now();
     apuState->TickCycle();
     GpuTickResult gpuTickResult = gpuState->TickCycle();
@@ -150,6 +151,14 @@ void GbCpu::TickCycle()
         auto beforeApply = std::chrono::high_resolution_clock::now();
         ApplyInstructionResult(state.get(), memoryState.get(), queuedInstructionResult.value());
         gb4e::ui::applyTimeNs = (std::chrono::high_resolution_clock::now() - beforeApply).count();
+        if (historicInstructions.size() > 0) {
+            historicInstructions[historicInstructionsPtr] =
+                HistoricInstructionResult(totalCycles, queuedInstructionResult.value());
+            historicInstructionsPtr++;
+            if (historicInstructionsPtr >= historicInstructions.size()) {
+                historicInstructionsPtr = 0;
+            }
+        }
         queuedInstructionResult = {};
     }
     u16 oamDmaLocAfter = state->GetOamDmaLocation();

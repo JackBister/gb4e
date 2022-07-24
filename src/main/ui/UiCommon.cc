@@ -7,6 +7,7 @@ namespace gb4e::ui
 bool showConsole = false;
 bool showDebugger = false;
 bool showGpuDebugger = false;
+bool showInstructionHistory = false;
 bool showInstructionWatch = false;
 bool showMemoryWatch = false;
 bool showMetrics = false;

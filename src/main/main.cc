@@ -18,6 +18,7 @@
 #include "ui/Console.hh"
 #include "ui/Debugger.hh"
 #include "ui/GpuDebugger.hh"
+#include "ui/InstructionHistory.hh"
 #include "ui/InstructionWatch.hh"
 #include "ui/MemoryWatch.hh"
 #include "ui/Metrics.hh"
@@ -74,7 +75,9 @@ int main(int argc, char ** argv)
 
     gb4e::GbRenderer gbRenderer;
     gb4e::InputSystemImpl inputSystem;
+    inputSystem.Init();
 
+    gb4e::ui::InitInstructionHistory();
     gb4e::ui::InitInstructionWatch();
 
     std::optional<SizedArray> bootrom = gb4e::SlurpFile("bootrom.bin");
@@ -122,6 +125,7 @@ int main(int argc, char ** argv)
 
         gb4e::ui::DrawNavbar();
         gb4e::ui::DrawRegisterWatch(gbCpu.GetState());
+        gb4e::ui::DrawInstructionHistory(&gbCpu);
         gb4e::ui::DrawInstructionWatch(gbCpu.GetState(), gbCpu.GetMemory());
         gb4e::ui::DrawDebugger(&gbCpu);
         gb4e::ui::DrawGpuDebugger(gbCpu.GetGpu());

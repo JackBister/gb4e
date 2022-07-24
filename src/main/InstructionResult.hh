@@ -210,6 +210,15 @@ public:
           consumedCycles(consumedCycles)
     {
     }
+    InstructionResult(std::optional<FlagSet> flagSet, std::optional<InterruptSet> interruptSet,
+                      std::vector<MemoryWrite> memoryWrites, std::vector<RegisterWrite> registerWrites,
+                      u8 consumedBytes, u8 consumedCycles)
+        : flagSet(flagSet), interruptSet(interruptSet), memoryWrites(memoryWrites), registerWrites(registerWrites),
+          consumedBytes(consumedBytes), consumedCycles(consumedCycles)
+    {
+        assert(consumedBytes <= 3);
+        assert(consumedCycles <= 6);
+    }
 
     std::optional<FlagSet> GetFlagSet() const { return flagSet; }
     std::optional<InterruptSet> GetInterruptSet() const { return interruptSet; }
@@ -218,6 +227,7 @@ public:
     u8 GetConsumedBytes() const { return consumedBytes; }
     u8 GetConsumedCycles() const { return consumedCycles; }
 
+    InstructionResult Reverse() const;
     std::string ToString() const;
 
 private:
@@ -227,6 +237,25 @@ private:
     std::vector<RegisterWrite> registerWrites;
     u8 consumedBytes;
     u8 consumedCycles;
+};
+
+class HistoricInstructionResult
+{
+public:
+    HistoricInstructionResult() : isValid(false), totalCycles(0) {}
+    HistoricInstructionResult(u64 totalCycles, InstructionResult const & result)
+        : isValid(true), totalCycles(totalCycles), result(result)
+    {
+    }
+
+    bool IsValid() const { return isValid; }
+    u64 GetTotalCycles() const { return totalCycles; }
+    InstructionResult const & GetResult() const { return result; }
+
+private:
+    bool isValid;
+    u64 totalCycles;
+    InstructionResult result;
 };
 
 void ApplyInstructionResult(GbCpuState *, MemoryState *, InstructionResult const &);

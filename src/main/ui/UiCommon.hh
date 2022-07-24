@@ -7,6 +7,7 @@ namespace gb4e::ui
 extern bool showConsole;
 extern bool showDebugger;
 extern bool showGpuDebugger;
+extern bool showInstructionHistory;
 extern bool showInstructionWatch;
 extern bool showMemoryWatch;
 extern bool showMetrics;

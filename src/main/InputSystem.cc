@@ -5,6 +5,21 @@
 
 namespace gb4e
 {
+void InputSystemImpl::Init()
+{
+    auto & imguiIo = ImGui::GetIO();
+
+    imguiIo.KeyMap[ImGuiKey_Space] = SDL_SCANCODE_SPACE;
+    imguiIo.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
+    imguiIo.KeyMap[ImGuiKey_UpArrow] = SDL_SCANCODE_UP;
+    imguiIo.KeyMap[ImGuiKey_LeftArrow] = SDL_SCANCODE_LEFT;
+    imguiIo.KeyMap[ImGuiKey_RightArrow] = SDL_SCANCODE_RIGHT;
+    imguiIo.KeyMap[ImGuiKey_Enter] = SDL_SCANCODE_RETURN;
+    imguiIo.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE;
+
+    imguiIo.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+}
+
 void InputSystemImpl::Tick()
 {
     auto & imguiIo = ImGui::GetIO();

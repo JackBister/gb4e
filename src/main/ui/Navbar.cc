@@ -20,6 +20,7 @@ void DrawNavbar()
         ImGui::MenuItem("Memory", nullptr, &showMemoryWatch);
         ImGui::MenuItem("Metrics", nullptr, &showMetrics);
         ImGui::MenuItem("GPU Debugger", nullptr, &showGpuDebugger);
+        ImGui::MenuItem("Instruction History", nullptr, &showInstructionHistory);
 
         ImGui::EndMainMenuBar();
     }

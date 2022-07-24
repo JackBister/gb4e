@@ -30,7 +30,8 @@ void DrawRegisterWatch(GbCpuState const * state)
             ImGui::SameLine();
             ImGui::Text("F");
             ImGui::SameLine();
-            ImGui::Text("%02x", f);
+            std::string flagString = FlagsToString(f);
+            ImGui::Text("%s", flagString.c_str());
         }
 
         {
