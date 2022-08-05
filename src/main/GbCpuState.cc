@@ -12,7 +12,7 @@ namespace gb4e
 
 GbCpuState::GbCpuState(size_t bootromSize, u8 const * bootrom) : bootromSize(bootromSize), bootrom(bootrom)
 {
-    Set16BitRegisterValue(GetRegister(RegisterName::AF), 0x01B0);
+    Set16BitRegisterValue(GetRegister(RegisterName::AF), 0x11B0);
     Set16BitRegisterValue(GetRegister(RegisterName::BC), 0x0013);
     Set16BitRegisterValue(GetRegister(RegisterName::DE), 0x00D8);
     Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x014D);
@@ -22,7 +22,7 @@ GbCpuState::GbCpuState(size_t bootromSize, u8 const * bootrom) : bootromSize(boo
 
 void GbCpuState::Reset()
 {
-    Set16BitRegisterValue(GetRegister(RegisterName::AF), 0x01B0);
+    Set16BitRegisterValue(GetRegister(RegisterName::AF), 0x11B0);
     Set16BitRegisterValue(GetRegister(RegisterName::BC), 0x0013);
     Set16BitRegisterValue(GetRegister(RegisterName::DE), 0x00D8);
     Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x014D);

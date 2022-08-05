@@ -6,7 +6,7 @@
       "type": "cppvsdbg",
       "request": "launch",
       "program": "build/Debug/gb4e.exe",
-      "args": ["tetris.gb"],
+      "args": ["tetris.gb", "--tracefile", "tetris.trace.txt"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -19,6 +19,20 @@
       "request": "launch",
       "program": "build/RelWithDebInfo/gb4e.exe",
       "args": ["tetris.gb"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "integratedTerminal",
+      "preLaunchTask": "msbuild_RelWithDebInfo"
+    },
+    {
+      "name": "(Windows) Launch Blargg Release w/ Debug Info",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "build/RelWithDebInfo/gb4e.exe",
+      "args": [
+        "src/third_party/gameboy-test-roms/blargg/cpu_instrs/cpu_instrs.gb"
+      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

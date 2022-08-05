@@ -9,7 +9,7 @@ TEST Gpu_LoadTile()
 {
     using namespace gb4e;
 
-    NopRenderer renderer;
+    FakeRenderer renderer;
     GbGpuState state(GbModel::DMG, &renderer);
     state.WriteMemory(0xFF40, 0x91); // LCDC: Display on, 8000 address mode, BG on
     state.WriteMemory(0x9910, 0x19); // Tile at x: 0x10, y: 0x08 uses tile no 0x19

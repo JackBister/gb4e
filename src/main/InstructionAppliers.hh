@@ -222,23 +222,47 @@ InstructionResult CallConditionalA16(GbCpuState const * state, MemoryState const
 
 InstructionResult CpD8(GbCpuState const * state, MemoryState const * memory);
 
-template <RegisterName ADDR>
-InstructionResult CpFromMem(GbCpuState const * state, MemoryState const * memory)
+template <RegisterName SRC>
+InstructionResult Cp(GbCpuState const * state, MemoryState const * memory)
 {
-    static_assert(ADDR == RegisterName::HL, "CpFromMem address register must be HL");
-    Register constexpr addrReg(ADDR);
-    Register constexpr cpReg(RegisterName::A);
+    Register constexpr srcReg(SRC);
+    Register constexpr dstReg(RegisterName::A);
+    if constexpr (srcReg.Is16Bit()) {
+        u16 location = state->Get16BitRegisterValue(srcReg);
+        u8 srcValue = memory->Read(location);
+        u8 dstValue = state->Get8BitRegisterValue(dstReg);
+        u8 result = dstValue - srcValue;
 
-    u16 addr = state->Get16BitRegisterValue(addrReg);
-    u8 valueAtAddr = memory->Read(addr);
-    u8 valueInReg = state->Get8BitRegisterValue(cpReg);
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = FLAG_N;
+        if (result == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        if (((int)dstValue & 0xF) - ((int)srcValue & 0xF) < 0) {
+            newFlags |= FLAG_HC;
+        }
+        if (((int)dstValue) - ((int)srcValue) < 0) {
+            newFlags |= FLAG_C;
+        }
+        return InstructionResult(FlagSet(prevFlags, newFlags), 1, 2);
+    } else {
+        u8 dstValue = state->Get8BitRegisterValue(dstReg);
+        u8 srcValue = state->Get8BitRegisterValue(srcReg);
+        u8 result = dstValue - srcValue;
 
-    u8 prevFlags = state->GetFlags();
-    u8 flags = FLAG_N; // Always set N flag
-    if (valueAtAddr == valueInReg) {
-        flags |= FLAG_ZERO;
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = FLAG_N;
+        if (result == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        if (((int)dstValue & 0xF) - ((int)srcValue & 0xF) < 0) {
+            newFlags |= FLAG_HC;
+        }
+        if (((int)dstValue) - ((int)srcValue) < 0) {
+            newFlags |= FLAG_C;
+        }
+        return InstructionResult(FlagSet(prevFlags, newFlags), 1, 1);
     }
-    return InstructionResult(FlagSet(prevFlags, flags), 1, 2);
 }
 
 InstructionResult Cpl(GbCpuState const * state, MemoryState const * memory);
@@ -516,6 +540,8 @@ InstructionResult LdHlIncDecA(GbCpuState const * state, MemoryState const * memo
         MemoryWrite(hlPrevValue, memPrevValue, aValue), RegisterWrite(hl, hlPrevValue, hlPrevValue + MODIFIER), 1, 2);
 }
 
+InstructionResult LdHlSpPlusImm(GbCpuState const * state, MemoryState const * memory);
+
 template <RegisterName ADDR, RegisterName SRC>
 InstructionResult LdMemViaReg(GbCpuState const * state, MemoryState const * memory)
 {
@@ -538,24 +564,40 @@ InstructionResult LdMemViaReg(GbCpuState const * state, MemoryState const * memo
     }
 }
 
+InstructionResult LdSpHl(GbCpuState const * state, MemoryState const * memory);
+
 template <RegisterName SRC>
 InstructionResult Or(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr srcReg(SRC);
-    static_assert(srcReg.Is8Bit());
     Register constexpr dstReg(RegisterName::A);
+    if constexpr (srcReg.Is16Bit()) {
+        u16 location = state->Get16BitRegisterValue(srcReg);
+        u8 prevValue = state->Get8BitRegisterValue(dstReg);
+        u8 orV = memory->Read(location);
+        u8 newValue = prevValue | orV;
 
-    u8 prevValue = state->Get8BitRegisterValue(dstReg);
-    u8 orV = state->Get8BitRegisterValue(srcReg);
-    u8 newValue = prevValue | orV;
+        u8 prevFlags = state->GetFlags();
+        u8 flags = 0;
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 2);
+    } else {
+        u8 prevValue = state->Get8BitRegisterValue(dstReg);
+        u8 orV = state->Get8BitRegisterValue(srcReg);
+        u8 newValue = prevValue | orV;
 
-    u8 prevFlags = state->GetFlags();
-    u8 flags = 0;
-    if (newValue == 0) {
-        flags |= FLAG_ZERO;
+        u8 prevFlags = state->GetFlags();
+        u8 flags = 0;
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
     }
-    return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
 }
+
+InstructionResult OrD8(GbCpuState const * state, MemoryState const * memory);
 
 template <RegisterName DST>
 InstructionResult Pop(GbCpuState const * state, MemoryState const * memory)
@@ -694,6 +736,40 @@ InstructionResult Rla(GbCpuState const * state, MemoryState const * memory);
 
 InstructionResult Rlca(GbCpuState const * state, MemoryState const * memory);
 
+template <RegisterName REG>
+InstructionResult Rr(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr reg(REG);
+    if constexpr (reg.Is16Bit()) {
+        u16 location = state->Get16BitRegisterValue(reg);
+        u8 prevValue = memory->Read(location);
+        u8 prevFlags = state->GetFlags();
+        u8 prevCarry = (prevFlags >> 4) & 1;
+        u8 newCarry = prevValue & 1;
+        u8 newFlags = newCarry ? FLAG_C : 0;
+
+        u8 newValue = (prevValue >> 1) | (prevCarry << 7);
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, newFlags), MemoryWrite(location, prevValue, newValue), 2, 4);
+    } else {
+        u8 prevValue = state->Get8BitRegisterValue(reg);
+        u8 prevFlags = state->GetFlags();
+        u8 prevCarry = (prevFlags >> 4) & 1;
+        u8 newCarry = prevValue & 1;
+        u8 newFlags = newCarry ? FLAG_C : 0;
+
+        u8 newValue = (prevValue >> 1) | (prevCarry << 7);
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(reg, prevValue, newValue), 2, 2);
+    }
+}
+
+InstructionResult Rra(GbCpuState const * state, MemoryState const * memory);
+
 template <u8 IDX>
 InstructionResult Rst(GbCpuState const * state, MemoryState const * memory)
 {
@@ -717,6 +793,38 @@ InstructionResult Rst(GbCpuState const * state, MemoryState const * memory)
                              {RegisterWrite(sp, prevSpAddr, prevSpAddr - 2), RegisterWrite(pc, prevPc, newPc)},
                              0,
                              4);
+}
+
+template <RegisterName SRC>
+InstructionResult Srl(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr srcReg(SRC);
+    if constexpr (srcReg.Is16Bit()) {
+        u16 location = state->Get16BitRegisterValue(srcReg);
+        u8 prevValue = memory->Read(location);
+        u8 newValue = (prevValue >> 1) & 0b01111111;
+
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = 0;
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        newFlags |= prevValue & 1;
+
+        return InstructionResult(FlagSet(prevFlags, newFlags), MemoryWrite(location, prevValue, newValue), 2, 4);
+    } else {
+        u8 prevValue = state->Get8BitRegisterValue(srcReg);
+        u8 newValue = (prevValue >> 1) & 0b01111111;
+
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = 0;
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        newFlags |= prevValue & 1;
+
+        return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(srcReg, prevValue, newValue), 2, 2);
+    }
 }
 
 template <u8 B>
@@ -757,25 +865,43 @@ template <RegisterName SRC>
 InstructionResult Sub(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr srcReg(SRC);
-    static_assert(srcReg.Is8Bit());
     Register constexpr dstReg(RegisterName::A);
+    if constexpr (srcReg.Is16Bit()) {
+        u16 location = state->Get16BitRegisterValue(srcReg);
+        u8 srcValue = memory->Read(location);
+        u8 dstValue = state->Get8BitRegisterValue(dstReg);
+        u8 newValue = dstValue - srcValue;
 
-    u8 prevValue = state->Get8BitRegisterValue(dstReg);
-    u8 sub = state->Get8BitRegisterValue(srcReg);
-    u8 newValue = prevValue - sub;
+        u8 prevFlags = state->GetFlags();
+        u8 newFlags = FLAG_N;
+        if (newValue == 0) {
+            newFlags |= FLAG_ZERO;
+        }
+        if (((int)dstValue & 0xF) - ((int)srcValue & 0xF) < 0) {
+            newFlags |= FLAG_HC;
+        }
+        if (((int)dstValue) - ((int)srcValue) < 0) {
+            newFlags |= FLAG_C;
+        }
+        return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(dstReg, dstValue, newValue), 1, 2);
+    } else {
+        u8 dstValue = state->Get8BitRegisterValue(dstReg);
+        u8 srcValue = state->Get8BitRegisterValue(srcReg);
+        u8 newValue = dstValue - srcValue;
 
-    u8 prevFlags = state->GetFlags();
-    u8 flags = FLAG_N; // Always set sub flag
-    if (newValue == 0) {
-        flags |= FLAG_ZERO;
+        u8 prevFlags = state->GetFlags();
+        u8 flags = FLAG_N; // Always set sub flag
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        if (((int)dstValue & 0xF) - ((int)srcValue & 0xF) < 0) {
+            flags |= FLAG_HC;
+        }
+        if (((int)dstValue) - ((int)srcValue) < 0) {
+            flags |= FLAG_C;
+        }
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, dstValue, newValue), 1, 1);
     }
-    if (prevValue < 0b00010000 && newValue >= 0b00010000) {
-        flags |= FLAG_HC;
-    }
-    if (newValue >= prevValue && sub != 0) {
-        flags |= FLAG_C;
-    }
-    return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 1);
 }
 
 InstructionResult SubD8(GbCpuState const * state, MemoryState const * memory);

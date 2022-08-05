@@ -38,11 +38,21 @@ private:
     std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * framebuffer;
 };
 
-class NopRenderer final : public Renderer
+class FakeRenderer final : public Renderer
 {
+
 public:
-    void SetFramebuffer(std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * framebuffer) final override {}
+    void SetFramebuffer(std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * fb) final override
+    {
+        this->framebuffer = fb;
+    }
 
     void Draw() final override {}
+
+    std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * GetFramebuffer() const { return framebuffer; }
+
+private:
+    std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * framebuffer;
 };
-};
+
+}

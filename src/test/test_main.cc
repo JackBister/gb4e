@@ -7,6 +7,7 @@
 #include "Cpu_test.hh"
 #include "Gpu_test.hh"
 #include "Instruction_test.hh"
+#include "Test_ROMs.hh"
 
 #pragma warning(push)
 #pragma warning(disable : 4996)
@@ -22,6 +23,7 @@ int main(int argc, char ** argv)
     RUN_SUITE(Cpu_test);
     RUN_SUITE(Gpu_test);
     RUN_SUITE(Common_test);
+    RUN_SUITE(Test_ROMs);
 
     GREATEST_MAIN_END();
 }

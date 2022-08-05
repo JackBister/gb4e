@@ -19,11 +19,15 @@ enum JoypadButton {
     BTN_START = 7,
 };
 
+struct InputSystemTickResult {
+    bool shouldExit;
+};
+
 class InputSystem
 {
 public:
     virtual void Init() = 0;
-    virtual void Tick() = 0;
+    virtual InputSystemTickResult Tick() = 0;
 
     virtual u8 GetJoypadState() const = 0;
 };
@@ -32,7 +36,7 @@ class InputSystemFake : public InputSystem
 {
 public:
     void Init() override {}
-    void Tick() override {}
+    InputSystemTickResult Tick() override { return {.shouldExit = false}; }
 
     // Bits 0-3=dpad, bits 4-7=buttons
     u8 GetJoypadState() const override { return joypadState; }
@@ -53,7 +57,7 @@ class InputSystemImpl : public InputSystem
 {
 public:
     void Init() override;
-    void Tick() override;
+    InputSystemTickResult Tick() override;
 
     u8 GetJoypadState() const override { return joypadState; }
 

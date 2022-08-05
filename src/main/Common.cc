@@ -7,7 +7,7 @@ namespace gb4e
 std::string FlagsToString(u8 flags)
 {
     if (flags == 0) {
-        return "0";
+        return "----";
     }
     std::stringstream ss;
     ss << ((flags & FLAG_ZERO) ? 'Z' : '-');

@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "Instruction.hh"
+#include "debug/InstructionTrace.hh"
 #include "logging/Logger.hh"
 #include "romfile/RomFile.hh"
 #include "ui/Metrics.hh"
@@ -15,11 +16,12 @@ namespace gb4e
 {
 
 std::optional<GbCpu> GbCpu::Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
-                                   InputSystem const & inputSystem)
+                                   InputSystem const & inputSystem,
+                                   std::vector<std::shared_ptr<MemoryListener>> listeners)
 {
     logger->Infof("CLOCK_FREQUENCY=%zu, CYCLE_DURATION_NS=%zu", CLOCK_FREQUENCY, CYCLE_DURATION_NS);
 
-    return GbCpu(bootromSize, bootrom, gbModel, renderer, inputSystem);
+    return GbCpu(bootromSize, bootrom, gbModel, renderer, inputSystem, listeners);
 }
 
 void GbCpu::Reset()
@@ -96,11 +98,14 @@ void GbCpu::TickCycle()
     totalCycles++;
     auto beforeGpu = std::chrono::high_resolution_clock::now();
     apuState->TickCycle();
-    GpuTickResult gpuTickResult = gpuState->TickCycle();
-    {
-        u8 iflags = state->ReadMemory(0xFF0F).value();
-        iflags |= gpuTickResult.interrupts;
-        state->WriteMemory(0xFF0F, iflags);
+    GpuTickResult gpuTickResult = {0};
+    for (int i = 0; i < 4; ++i) {
+        gpuTickResult = gpuState->TickCycle();
+        {
+            u8 iflags = state->ReadMemory(0xFF0F).value();
+            iflags |= gpuTickResult.interrupts;
+            state->WriteMemory(0xFF0F, iflags);
+        }
     }
     gb4e::ui::gpuCycleTimeNs = (std::chrono::high_resolution_clock::now() - beforeGpu).count();
     --waitCycles;
@@ -158,6 +163,20 @@ void GbCpu::TickCycle()
             if (historicInstructionsPtr >= historicInstructions.size()) {
                 historicInstructionsPtr = 0;
             }
+        }
+        if (enableTracing) {
+            gb4e::debug::TraceData traceData{
+                .a = state->Get8BitRegisterValue(Register(RegisterName::A)),
+                .f = state->GetFlags(),
+                .bc = state->Get16BitRegisterValue(Register(RegisterName::BC)),
+                .de = state->Get16BitRegisterValue(Register(RegisterName::DE)),
+                .hl = state->Get16BitRegisterValue(Register(RegisterName::HL)),
+                .sp = state->Get16BitRegisterValue(Register(RegisterName::SP)),
+                .pc = state->Get16BitRegisterValue(Register(RegisterName::PC)),
+                .cy = totalCycles,
+                .instr = memoryState->Read16(traceData.pc),
+            };
+            gb4e::debug::PushTrace(traceData);
         }
         queuedInstructionResult = {};
     }
@@ -218,12 +237,12 @@ GbCpu::GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> 
 }
 
 GbCpu::GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
-             InputSystem const & inputSystem)
+             InputSystem const & inputSystem, std::vector<std::shared_ptr<MemoryListener>> listeners)
     : apuState(new GbApuState()), gpuState(new GbGpuState(gbModel, renderer)),
       state(new GbCpuState(bootromSize, bootrom)), cartridge(new Cartridge()), joypad(new GbJoypad(inputSystem))
 {
-    this->memoryState =
-        std::make_unique<GbMemoryState>(state.get(), gpuState.get(), apuState.get(), cartridge.get(), joypad.get());
+    this->memoryState = std::make_unique<GbMemoryState>(
+        state.get(), gpuState.get(), apuState.get(), cartridge.get(), joypad.get(), listeners);
 }
 
 };

@@ -924,54 +924,6 @@ TEST Instr_Or_B()
     PASS();
 }
 
-TEST Instr_CpFromMem_HL_Equals()
-{
-    using namespace gb4e;
-    auto applier = CpFromMem<RegisterName::HL>;
-    GbCpuState state;
-    MemoryStateFake memory;
-    state.SetFlags(0);
-    state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
-    state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x1);
-    memory.Write(0x1, 100);
-
-    auto result = applier(&state, &memory);
-
-    ASSERT(result.GetFlagSet().has_value());
-    auto flagSet = result.GetFlagSet().value();
-    ASSERT_EQ(0, flagSet.GetPreviousValue());
-    ASSERT_EQ(0b11000000, flagSet.GetValue());
-    ASSERT(result.GetMemoryWrites().empty());
-    ASSERT(result.GetRegisterWrites().empty());
-    ASSERT_EQ(1, result.GetConsumedBytes());
-    ASSERT_EQ(2, result.GetConsumedCycles());
-    PASS();
-}
-
-TEST Instr_CpFromMem_HL_NotEquals()
-{
-    using namespace gb4e;
-    auto applier = CpFromMem<RegisterName::HL>;
-    GbCpuState state;
-    MemoryStateFake memory;
-    state.SetFlags(0);
-    state.Set8BitRegisterValue(GetRegister(RegisterName::A), 100);
-    state.Set16BitRegisterValue(GetRegister(RegisterName::HL), 0x1);
-    memory.Write(0x1, 23);
-
-    auto result = applier(&state, &memory);
-
-    ASSERT(result.GetFlagSet().has_value());
-    auto flagSet = result.GetFlagSet().value();
-    ASSERT_EQ(0, flagSet.GetPreviousValue());
-    ASSERT_EQ(0b01000000, flagSet.GetValue());
-    ASSERT(result.GetMemoryWrites().empty());
-    ASSERT(result.GetRegisterWrites().empty());
-    ASSERT_EQ(1, result.GetConsumedBytes());
-    ASSERT_EQ(2, result.GetConsumedCycles());
-    PASS();
-}
-
 TEST Instr_RetNz_Jump()
 {
     using namespace gb4e;
@@ -1404,7 +1356,7 @@ TEST Instr_CpD8_NotEquals()
     ASSERT(result.GetFlagSet().has_value());
     auto flagSet = result.GetFlagSet().value();
     ASSERT_EQ(0, flagSet.GetPreviousValue());
-    ASSERT_EQ(0b01000000, flagSet.GetValue());
+    ASSERT_EQ(0b01110000, flagSet.GetValue());
     ASSERT(result.GetMemoryWrites().empty());
     ASSERT(result.GetRegisterWrites().empty());
     ASSERT_EQ(2, result.GetConsumedBytes());
@@ -2586,8 +2538,6 @@ SUITE(Instruction_test)
     RUN_TEST(Instr_Xor_B);
     RUN_TEST(Instr_Xor_HL);
     RUN_TEST(Instr_Or_B);
-    RUN_TEST(Instr_CpFromMem_HL_Equals);
-    RUN_TEST(Instr_CpFromMem_HL_NotEquals);
     RUN_TEST(Instr_RetNz_Jump);
     RUN_TEST(Instr_RetNz_NoJump);
     RUN_TEST(Instr_RetZ_Jump);

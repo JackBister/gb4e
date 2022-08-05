@@ -27,7 +27,8 @@ public:
      * bootrom must be 256 bytes long and must be valid for as long as the CPU is running
      */
     static std::optional<GbCpu> Create(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
-                                       InputSystem const & inputSystem);
+                                       InputSystem const & inputSystem,
+                                       std::vector<std::shared_ptr<MemoryListener>> listeners = {});
     GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> && state,
           std::unique_ptr<GbGpuState> && gpuState, std::unique_ptr<Cartridge> && cartridge,
           std::unique_ptr<GbJoypad> && joypad);
@@ -70,9 +71,11 @@ public:
     }
     size_t GetHistoricInstructionsPtr() const { return historicInstructionsPtr; }
 
+    void SetEnableTracing(bool b) { enableTracing = b; }
+
 private:
-    GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer,
-          InputSystem const & inputSystem);
+    GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer, InputSystem const & inputSystem,
+          std::vector<std::shared_ptr<MemoryListener>> listeners = {});
 
     std::unique_ptr<ApuState> apuState;
     std::unique_ptr<GbCpuState> state;
@@ -113,5 +116,7 @@ private:
 
     std::vector<HistoricInstructionResult> historicInstructions;
     size_t historicInstructionsPtr;
+
+    bool enableTracing = false;
 };
 };

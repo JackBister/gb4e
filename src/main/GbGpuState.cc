@@ -15,6 +15,18 @@ static u32 const DMG_COLOR_PALETTE[] = {0xFFFFFFFF, 0xFFC0C0C0, 0xFF606060, 0xFF
 GbGpuState::GbGpuState(GbModel gbModel, Renderer * renderer) : gbModel(gbModel)
 {
     renderer->SetFramebuffer(&this->framebuffer);
+    lcdc = 0x91;
+    scrollY = 0;
+    scrollX = 0;
+    bgp[0] = 0b00;
+    bgp[1] = 0b11;
+    bgp[2] = 0b11;
+    bgp[3] = 0b11;
+    windowY = 0;
+    windowX = 0;
+    vramBank = 0;
+    activeBank = bank0;
+    bgpIndex = 0;
 }
 
 void GbGpuState::Reset()

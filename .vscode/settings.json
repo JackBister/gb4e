@@ -88,6 +88,9 @@
     "bit": "cpp",
     "charconv": "cpp",
     "format": "cpp",
-    "stop_token": "cpp"
+    "stop_token": "cpp",
+    "queue": "cpp",
+    "random": "cpp",
+    "stack": "cpp"
   }
 }

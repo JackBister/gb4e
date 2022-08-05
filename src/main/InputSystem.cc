@@ -20,13 +20,13 @@ void InputSystemImpl::Init()
     imguiIo.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 }
 
-void InputSystemImpl::Tick()
+InputSystemTickResult InputSystemImpl::Tick()
 {
     auto & imguiIo = ImGui::GetIO();
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
-            exit(0);
+            return {.shouldExit = true};
         } else if (e.type == SDL_KEYDOWN) {
             if (!e.key.repeat) {
                 imguiIo.KeysDown[e.key.keysym.scancode] = true;
@@ -59,6 +59,8 @@ void InputSystemImpl::Tick()
     SetState(BTN_SELECT, imguiIo.KeysDown[SDL_SCANCODE_RSHIFT]);
     SetState(BTN_B, imguiIo.KeysDown[SDL_SCANCODE_Z]);
     SetState(BTN_A, imguiIo.KeysDown[SDL_SCANCODE_X]);
+
+    return {.shouldExit = false};
 }
 
 void InputSystemImpl::SetState(JoypadButton btn, bool state)

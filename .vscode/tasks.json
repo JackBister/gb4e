@@ -31,7 +31,14 @@
       "type": "shell",
       "windows": {
         "command": "cmake",
-        "args": ["-G", "Visual Studio 16 2019", "-A", "x64", ".."],
+        "args": [
+          "-G",
+          "Visual Studio 16 2019",
+          "-A",
+          "x64",
+          "-DRUN_TEST_ROMS=ON",
+          ".."
+        ],
         "options": {
           "cwd": "${workspaceFolder}/build"
         }
@@ -50,6 +57,7 @@
           "Visual Studio 16 2019",
           "-A",
           "x64",
+          "-DRUN_TEST_ROMS=ON",
           ".."
         ],
         "options": {

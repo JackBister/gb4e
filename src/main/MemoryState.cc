@@ -61,6 +61,9 @@ u16 GbMemoryState::Read16(u16 location) const
 
 void GbMemoryState::Write(u16 location, u8 value)
 {
+    for (auto & listener : listeners) {
+        listener->Write(location, value);
+    }
     cpu->WriteMemory(location, value);
     gpu->WriteMemory(location, value);
     joypad->WriteMemory(location, value);

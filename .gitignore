@@ -1,7 +1,10 @@
 
-build
 
 *.bin
 *.dll
 *.gb
 *.gbc
+*.trace.txt
+
+build
+src/third_party/gameboy-test-roms

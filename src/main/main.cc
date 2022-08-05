@@ -1,4 +1,5 @@
 
+#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <thread>
@@ -12,6 +13,7 @@
 #include "Instruction.hh"
 #include "Renderer.hh"
 #include "SlurpFile.hh"
+#include "debug/InstructionTrace.hh"
 #include "logging/Logger.hh"
 #include "romfile/RomFileLoader.hh"
 
@@ -72,6 +74,7 @@ int main(int argc, char ** argv)
         logger->Errorf("Failed to init Imgui backend");
         return 1;
     }
+    std::atomic_bool isShuttingDown = false;
 
     gb4e::GbRenderer gbRenderer;
     gb4e::InputSystemImpl inputSystem;
@@ -103,8 +106,21 @@ int main(int argc, char ** argv)
         return 1;
     }
 
+    std::optional<std::filesystem::path> traceOutputFilepath;
+    for (int i = 0; i < argc; ++i) {
+        if (strcmp(argv[i], "--tracefile") == 0 && i < (argc - 1)) {
+            traceOutputFilepath = argv[i + 1];
+            break;
+        }
+    }
+
     gb4e::GbCpu gbCpu = std::move(gbCpuOpt.value());
 
+    std::optional<std::thread> tracerThread;
+    if (traceOutputFilepath.has_value()) {
+        tracerThread = std::thread(gb4e::debug::TracerThread, traceOutputFilepath.value(), std::ref(isShuttingDown));
+        gbCpu.SetEnableTracing(true);
+    }
     gbCpu.LoadRom(&romFile);
 
     auto lastTick = std::chrono::high_resolution_clock::now();
@@ -117,7 +133,12 @@ int main(int argc, char ** argv)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
 
-        inputSystem.Tick();
+        {
+            auto const inputSystemResult = inputSystem.Tick();
+            if (inputSystemResult.shouldExit) {
+                break;
+            }
+        }
 
         if (gb4e::ui::isRunning) {
             gb4e::ui::cyclesPerFrame = gbCpu.Tick(16666666);
@@ -147,5 +168,10 @@ int main(int argc, char ** argv)
         lastTick = std::chrono::high_resolution_clock::now();
     }
 
+    isShuttingDown.store(true);
+
     ImGui_ImplOpenGL3_Shutdown();
+    if (tracerThread.has_value()) {
+        tracerThread.value().join();
+    }
 }

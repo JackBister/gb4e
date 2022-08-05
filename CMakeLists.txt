@@ -56,7 +56,7 @@ find_path(IMGUI_INCLUDE_DIR imgui.h)
 find_path(SDL_INCLUDE_DIR SDL2/SDL.h)
 
 target_include_directories(gb4e PUBLIC src/main)
-target_include_directories(gb4e SYSTEM PRIVATE ${GLEW_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR})
+target_include_directories(gb4e SYSTEM PRIVATE src/third_party ${GLEW_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR})
 
 target_link_libraries(
         gb4e
@@ -71,6 +71,7 @@ file(GLOB_RECURSE TEST_SOURCES src/test/*.cc src/test/*.hh)
 add_executable(gb4e_tests ${TEST_SOURCES} ${SOURCES})
 target_include_directories(gb4e_tests PUBLIC src/main)
 target_include_directories(gb4e_tests SYSTEM PRIVATE ${GLEW_INCLUDE_DIR} ${IMGUI_INCLUDE_DIR} ${SDL_INCLUDE_DIR})
+
 target_link_libraries(
         gb4e_tests
         ${GLEW_LIBRARY}
@@ -78,3 +79,8 @@ target_link_libraries(
         imgui::imgui
         ${SDL2_LIBRARY}
 )
+
+option(RUN_TEST_ROMS "Whether the test suite should include tests that require test ROMs to be downloaded. In order for this to work you must have run ./download-test-roms.sh before running the tests." OFF)
+if (RUN_TEST_ROMS)
+    target_compile_definitions(gb4e_tests PUBLIC -DRUN_TEST_ROMS)
+endif()

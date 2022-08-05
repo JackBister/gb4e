@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <memory>
+#include <vector>
 
 #include "Common.hh"
 
@@ -11,6 +13,12 @@ class ApuState;
 class GbCpuState;
 class GbGpuState;
 class GbJoypad;
+
+class MemoryListener
+{
+public:
+    virtual void Write(u16 location, u8 value) = 0;
+};
 
 class MemoryState
 {
@@ -34,8 +42,9 @@ private:
 class GbMemoryState : public MemoryState
 {
 public:
-    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, ApuState * apu, Cartridge * cartridge, GbJoypad * joypad)
-        : cpu(cpu), gpu(gpu), apu(apu), cartridge(cartridge), joypad(joypad)
+    GbMemoryState(GbCpuState * cpu, GbGpuState * gpu, ApuState * apu, Cartridge * cartridge, GbJoypad * joypad,
+                  std::vector<std::shared_ptr<MemoryListener>> listeners = {})
+        : cpu(cpu), gpu(gpu), apu(apu), cartridge(cartridge), joypad(joypad), listeners(listeners)
     {
     }
 
@@ -49,5 +58,7 @@ private:
     ApuState * apu;
     Cartridge * cartridge;
     GbJoypad * joypad;
+
+    std::vector<std::shared_ptr<MemoryListener>> listeners;
 };
 }
