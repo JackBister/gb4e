@@ -4,6 +4,7 @@
 *.dll
 *.gb
 *.gbc
+*.pdb
 *.trace.txt
 
 build
