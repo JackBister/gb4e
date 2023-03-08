@@ -24,16 +24,12 @@ public:
 
     void SetFramebuffer(std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * framebuffer) final override;
 
+    GLuint GetOutputImage() const { return texture; }
+
     void Draw() final override;
 
 private:
-    GLuint vbo;
-    GLuint ebo;
-    GLuint vao;
     GLuint texture;
-    GLuint vertShader;
-    GLuint fragShader;
-    GLuint program;
 
     std::array<u32, SCREEN_HEIGHT * SCREEN_WIDTH> const * framebuffer;
 };

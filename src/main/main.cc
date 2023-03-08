@@ -154,12 +154,16 @@ int main(int argc, char ** argv)
         gb4e::ui::DrawMemoryWatch(gbCpu.GetState(), gbCpu.GetMemory());
         gb4e::ui::DrawMetrics();
 
-        ImGui::Render();
         SDL_GetWindowSize(sdlWindow, &windowWidth, &windowHeight);
         glViewport(0, 0, windowWidth, windowHeight);
         glClearColor(0, 0, 0xFF, 0xFF);
         glClear(GL_COLOR_BUFFER_BIT);
         gbRenderer.Draw();
+        if (ImGui::Begin("Screen", nullptr, ImGuiWindowFlags_NoResize)) {
+            ImGui::Image((ImTextureID)gbRenderer.GetOutputImage(), ImVec2(800, 600));
+            ImGui::End();
+        }
+        ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(sdlWindow);

@@ -33,7 +33,7 @@
         "command": "cmake",
         "args": [
           "-G",
-          "Visual Studio 16 2019",
+          "Visual Studio 17 2022",
           "-A",
           "x64",
           "-DRUN_TEST_ROMS=ON",
@@ -54,7 +54,7 @@
         "args": [
           "-DCMAKE_BUILD_TYPE=Release",
           "-G",
-          "Visual Studio 16 2019",
+          "Visual Studio 17 2022",
           "-A",
           "x64",
           "-DRUN_TEST_ROMS=ON",
