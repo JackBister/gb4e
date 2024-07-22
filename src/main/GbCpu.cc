@@ -49,6 +49,9 @@ void GbCpu::StepInstruction()
 int GbCpu::Tick(u64 deltaTimeNs)
 {
     int numCycles = 0;
+    if (IsAtMemoryBreakpoint()) {
+        return numCycles;
+    }
     auto joypadTickResult = joypad->Tick();
     if (joypadTickResult.triggerInterrupt) {
         u8 iflags = state->ReadMemory(0xFF0F).value();
@@ -78,6 +81,9 @@ int GbCpu::Tick(u64 deltaTimeNs)
         TickCycle();
         u16 pc = state->Get16BitRegisterValue(GetRegister(RegisterName::PC));
         if (breakpoints.find(pc) != breakpoints.end()) {
+            return numCycles;
+        }
+        if (IsAtMemoryBreakpoint()) {
             return numCycles;
         }
         if (breakOnDecodeError) {
@@ -224,6 +230,20 @@ std::string GbCpu::DumpInstructions(u16 startAddress, u16 endAddress)
         i += instruction->GetInstructionSize();
     }
     return ss.str();
+}
+
+bool GbCpu::IsAtMemoryBreakpoint() const
+{
+
+    if (memoryWriteBreakpoints.size() > 0 && queuedInstructionResult.has_value()) {
+        auto & memoryWrites = queuedInstructionResult.value().GetMemoryWrites();
+        for (auto const & memoryWrite : memoryWrites) {
+            if (memoryWriteBreakpoints.find(memoryWrite.GetLocation()) != memoryWriteBreakpoints.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 GbCpu::GbCpu(std::unique_ptr<ApuState> && apuState, std::unique_ptr<GbCpuState> && state,

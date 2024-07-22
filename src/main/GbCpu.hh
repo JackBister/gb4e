@@ -55,6 +55,10 @@ public:
     void RemoveBreakpoint(u16 breakpoint) { breakpoints.erase(breakpoint); }
     std::set<u16> const & GetBreakpoints() const { return breakpoints; }
 
+    void AddMemoryWriteBreakpoint(u16 breakpoint) { memoryWriteBreakpoints.emplace(breakpoint); }
+    void RemoveMemoryWriteBreakpoint(u16 breakpoint) { memoryWriteBreakpoints.erase(breakpoint); }
+    std::set<u16> const & GetMemoryWriteBreakpoints() const { return memoryWriteBreakpoints; }
+
     void SetBreakOnDecodeError(bool b) { breakOnDecodeError = b; }
     bool GetBreakOnDecodeError() const { return breakOnDecodeError; }
 
@@ -76,6 +80,8 @@ public:
 private:
     GbCpu(size_t bootromSize, u8 const * bootrom, GbModel gbModel, Renderer * renderer, InputSystem const & inputSystem,
           std::vector<std::shared_ptr<MemoryListener>> listeners = {});
+
+    bool IsAtMemoryBreakpoint() const;
 
     std::unique_ptr<ApuState> apuState;
     std::unique_ptr<GbCpuState> state;
@@ -109,6 +115,10 @@ private:
     // If the value of the PC register ever is contained in breakpoints, GbCpu::Tick will return early
     // This is to avoid skipping past breakpoints when emulating multiple instructions in one tick
     std::set<u16> breakpoints;
+
+    // If a memory location contained in memoryWriteBreakpoints is written to, the CPU will pause before executing the
+    // instruction
+    std::set<u16> memoryWriteBreakpoints;
 
     // If true and the CPU encounters an opcode which decodes to INSTR_INVALID, the current PC will be added to
     // breakpoints

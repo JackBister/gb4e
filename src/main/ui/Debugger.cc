@@ -20,6 +20,8 @@ int deltaTimeNs = 250;
 bool breakOnDecodeError = false;
 char breakpointBuf[BREAKPOINT_BUF_SIZE];
 
+char memoryBreakpointBuf[BREAKPOINT_BUF_SIZE];
+
 void DrawDebugger(GbCpu * cpu)
 {
     if (!showDebugger) {
@@ -55,7 +57,7 @@ void DrawDebugger(GbCpu * cpu)
 
         ImGui::InputText("Breakpoint", breakpointBuf, BREAKPOINT_BUF_SIZE);
         ImGui::SameLine();
-        if (ImGui::Button("Add")) {
+        if (ImGui::Button("Add Breakpoint")) {
             std::string breakpointString(breakpointBuf);
             if (!breakpointString.empty()) {
                 u16 breakpoint = std::stoi(breakpointString, nullptr, 16);
@@ -75,6 +77,30 @@ void DrawDebugger(GbCpu * cpu)
 
         for (auto const breakpoint : removed) {
             cpu->RemoveBreakpoint(breakpoint);
+        }
+
+        ImGui::InputText("Memory Breakpoint", memoryBreakpointBuf, BREAKPOINT_BUF_SIZE);
+        ImGui::SameLine();
+        if (ImGui::Button("Add Memory Breakpoint")) {
+            std::string breakpointString(memoryBreakpointBuf);
+            if (!breakpointString.empty()) {
+                u16 memoryBreakpoint = std::stoi(breakpointString, nullptr, 16);
+                cpu->AddMemoryWriteBreakpoint(memoryBreakpoint);
+                memoryBreakpointBuf[0] = '\0';
+            }
+        }
+
+        std::set<u16> removedMemoryBreakpoints;
+        for (auto const breakpoint : cpu->GetMemoryWriteBreakpoints()) {
+            ImGui::Text("%04x", breakpoint);
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Remove")) {
+                removedMemoryBreakpoints.emplace(breakpoint);
+            }
+        }
+
+        for (auto const breakpoint : removedMemoryBreakpoints) {
+            cpu->RemoveMemoryWriteBreakpoint(breakpoint);
         }
     }
     ImGui::End();
