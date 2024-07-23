@@ -391,6 +391,31 @@ InstructionResult Rra(GbCpuState const * state, MemoryState const * memory)
     return InstructionResult(FlagSet(prevFlags, newFlags), RegisterWrite(reg, prevValue, newValue), 1, 1);
 }
 
+InstructionResult SbcD8(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr dstReg(RegisterName::A);
+    Register constexpr pcReg(RegisterName::PC);
+
+    u16 pcValue = state->Get16BitRegisterValue(pcReg);
+    u8 imm = memory->Read(pcValue + 1);
+
+    u8 prevFlags = state->GetFlags();
+    u8 prevValue = state->Get8BitRegisterValue(dstReg);
+    u8 newValue = prevValue - imm - ((prevFlags & FLAG_C) ? 1 : 0);
+
+    u8 flags = FLAG_N; // Always set sub flag
+    if (newValue == 0) {
+        flags |= FLAG_ZERO;
+    }
+    if (prevValue > 0b00010000 && newValue <= 0b00010000) {
+        flags |= FLAG_HC;
+    }
+    if (newValue >= prevValue && imm != 0) {
+        flags |= FLAG_C;
+    }
+    return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 2, 2);
+}
+
 InstructionResult SubD8(GbCpuState const * state, MemoryState const * memory)
 {
     Register constexpr dstReg(RegisterName::A);

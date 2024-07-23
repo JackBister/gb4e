@@ -173,7 +173,14 @@ Instruction const INSTR_94(0x94, 0x9400, "SUB H", 1, 1, Sub<RegisterName::H>);
 Instruction const INSTR_95(0x95, 0x9500, "SUB L", 1, 1, Sub<RegisterName::L>);
 Instruction const INSTR_96(0x96, 0x9600, "SUB (HL)", 1, 1, Sub<RegisterName::HL>);
 Instruction const INSTR_97(0x97, 0x9700, "SUB A", 1, 1, Sub<RegisterName::A>);
-// 98-9F
+Instruction const INSTR_98(0x98, 0x9800, "SBC A, B", 1, 1, Sbc<RegisterName::B>);
+Instruction const INSTR_99(0x99, 0x9900, "SBC A, C", 1, 1, Sbc<RegisterName::C>);
+Instruction const INSTR_9A(0x9A, 0x9A00, "SBC A, D", 1, 1, Sbc<RegisterName::D>);
+Instruction const INSTR_9B(0x9B, 0x9B00, "SBC A, E", 1, 1, Sbc<RegisterName::E>);
+Instruction const INSTR_9C(0x9C, 0x9C00, "SBC A, H", 1, 1, Sbc<RegisterName::H>);
+Instruction const INSTR_9D(0x9D, 0x9D00, "SBC A, L", 1, 1, Sbc<RegisterName::L>);
+Instruction const INSTR_9E(0x9E, 0x9E00, "SBC A, (HL)", 1, 2, Sbc<RegisterName::HL>);
+Instruction const INSTR_9F(0x9F, 0x9F00, "SBC A, A", 1, 1, Sbc<RegisterName::A>);
 
 Instruction const INSTR_A0(0xA0, 0xA000, "AND B", 1, 1, And<RegisterName::B>);
 Instruction const INSTR_A1(0xA1, 0xA100, "AND C", 1, 1, And<RegisterName::C>);
@@ -241,7 +248,7 @@ Instruction const INSTR_DA(0xDA, 0xDA00, "JP C, a16", 3, 3, JpFlagA16<0b00010000
 Instruction const INSTR_DB(0xDB, 0xDB00, "INVALID DB", 1, 1, APPLIER_NOP);
 Instruction const INSTR_DC(0xDC, 0xDC00, "CALL C, a16", 3, 6, CallConditionalA16<FLAG_C, true>);
 Instruction const INSTR_DD(0xDD, 0xDD00, "INVALID DD", 1, 1, APPLIER_NOP);
-// DE
+Instruction const INSTR_DE(0xDE, 0xDE00, "SBC A, d8", 2, 2, SbcD8);
 Instruction const INSTR_DF(0xDF, 0xDF00, "RST 3", 1, 4, Rst<3>);
 
 Instruction const INSTR_E0(0xE0, 0xE000, "LD (a8), A", 2, 3, LdA8);
@@ -700,14 +707,14 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_95, //95
     &INSTR_96,
     &INSTR_97,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, //9A
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID,
-    &INSTR_INVALID, //9F
+    &INSTR_98,
+    &INSTR_99,
+    &INSTR_9A, //9A
+    &INSTR_9B,
+    &INSTR_9C,
+    &INSTR_9D,
+    &INSTR_9E,
+    &INSTR_9F, //9F
     &INSTR_A0, //A0
     &INSTR_A1,
     &INSTR_A2,
@@ -770,7 +777,7 @@ std::array<Instruction const *, 256> const INSTRUCTIONS_8BIT{
     &INSTR_DB,
     &INSTR_DC,
     &INSTR_DD,
-    &INSTR_INVALID,
+    &INSTR_DE,
     &INSTR_DF, //DF
     &INSTR_E0, //E0
     &INSTR_E1,

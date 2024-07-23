@@ -38,8 +38,8 @@ std::string MemoryWrite::ToString() const
     std::stringstream ss;
     ss << '{';
     ss << '\t' << "\"location\": " << std::hex << (int)location << ',';
-    ss << '\t' << "\"previousValue\": " << std::dec << (int)previousValue << ',';
-    ss << '\t' << "\"value\": " << std::dec << (int)value << ' ';
+    ss << '\t' << "\"previousValue\": " << std::hex << (int)previousValue << ',';
+    ss << '\t' << "\"value\": " << std::hex << (int)value << ' ';
     ss << '}';
     return ss.str();
 }
@@ -49,9 +49,9 @@ std::string RegisterWrite::ToString() const
     std::stringstream ss;
     ss << '{';
     ss << '\t' << "\"register\": " << reg.ToString() << ',';
-    ss << '\t' << "\"previousValue\": " << std::dec << (int)(reg.Is16Bit() ? wordPreviousValue : bytePreviousValue)
+    ss << '\t' << "\"previousValue\": " << std::hex << (int)(reg.Is16Bit() ? wordPreviousValue : bytePreviousValue)
        << ',';
-    ss << '\t' << "\"value\": " << std::dec << (int)(reg.Is16Bit() ? wordValue : byteValue) << ' ';
+    ss << '\t' << "\"value\": " << std::hex << (int)(reg.Is16Bit() ? wordValue : byteValue) << ' ';
     ss << '}';
     return ss.str();
 }

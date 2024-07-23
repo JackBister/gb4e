@@ -74,17 +74,24 @@ InstructionResult Add(GbCpuState const * state, MemoryState const * memory)
         static_assert(srcReg.Is16Bit(), "ADD r16, r16 source register must be 16-bit");
         u16 prevValue = state->Get16BitRegisterValue(dstReg);
         u16 add = state->Get16BitRegisterValue(srcReg);
-        u16 newValue = prevValue + add;
 
-        u8 prevHi = prevValue >> 8;
-        u8 newHi = newValue >> 8;
+        u16 prevLo = prevValue & 0xFF;
+        u16 loAdd = add & 0xFF;
+        u16 newLo = prevLo + loAdd;
+        u16 loCarry = (newLo & BIT(8)) >> 8;
+
+        u16 prevHi = prevValue >> 8;
+        u16 hiAdd = add >> 8;
+        u16 newHi = prevHi + hiAdd + loCarry;
+
+        u16 newValue = (newHi & 0xFF) << 8 | (newLo & 0xFF);
 
         u8 prevFlags = state->GetFlags();
         u8 flags = prevFlags & FLAG_ZERO; // Preserve zero flag
-        if (prevHi < 0b00010000 && newHi >= 0b00010000) {
+        if (((u8)prevHi ^ hiAdd ^ newHi) & BIT(4)) {
             flags |= FLAG_HC;
         }
-        if (newHi <= prevHi) {
+        if (newHi & BIT(8)) {
             flags |= FLAG_C;
         }
         return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(dstReg, prevValue, newValue), 1, 2);
@@ -794,6 +801,53 @@ InstructionResult Rst(GbCpuState const * state, MemoryState const * memory)
                              0,
                              4);
 }
+
+template <RegisterName SRC>
+InstructionResult Sbc(GbCpuState const * state, MemoryState const * memory)
+{
+    Register constexpr srcReg(SRC);
+    Register constexpr aReg(RegisterName::A);
+    u8 prevValue = state->Get8BitRegisterValue(aReg);
+    u8 prevFlags = state->GetFlags();
+    if constexpr (srcReg.Is16Bit()) {
+        static_assert(SRC == RegisterName::HL);
+        u16 location = state->Get16BitRegisterValue(srcReg);
+        u8 srcValue = memory->Read(location);
+        u8 newValue = prevValue - srcValue - ((prevFlags & FLAG_C) ? 1 : 0);
+
+        u8 flags = FLAG_N; // Always set sub flag
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        if (((int)newValue & 0xF) - ((int)srcValue & 0xF) < 0) {
+            flags |= FLAG_HC;
+        }
+        if (((int)newValue) - ((int)srcValue) < 0) {
+            flags |= FLAG_C;
+        }
+
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(aReg, prevValue, newValue), 1, 2);
+
+    } else {
+        u8 srcValue = state->Get8BitRegisterValue(srcReg);
+        u8 newValue = prevValue - srcValue - ((prevFlags & FLAG_C) ? 1 : 0);
+
+        u8 flags = FLAG_N; // Always set sub flag
+        if (newValue == 0) {
+            flags |= FLAG_ZERO;
+        }
+        if (((int)newValue & 0xF) - ((int)srcValue & 0xF) < 0) {
+            flags |= FLAG_HC;
+        }
+        if (((int)newValue) - ((int)srcValue) < 0) {
+            flags |= FLAG_C;
+        }
+
+        return InstructionResult(FlagSet(prevFlags, flags), RegisterWrite(aReg, prevValue, newValue), 1, 1);
+    }
+}
+
+InstructionResult SbcD8(GbCpuState const * state, MemoryState const * memory);
 
 template <RegisterName SRC>
 InstructionResult Srl(GbCpuState const * state, MemoryState const * memory)
